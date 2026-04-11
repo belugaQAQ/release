@@ -56,6 +56,13 @@ async function initTables() {
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     `);
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS changelog_data (
+        id SERIAL PRIMARY KEY,
+        content TEXT NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
     console.log('表初始化成功');
   } finally {
     await client.end();
@@ -136,6 +143,46 @@ export async function writeLatestData(data) {
     }
   } catch (error) {
     console.error('写入最新数据失败:', error);
+    throw error;
+  }
+}
+
+export async function readChangelog() {
+  console.log('读取更新日志...');
+  try {
+    await initTables();
+    const client = await getClient();
+    try {
+      const result = await client.query('SELECT content FROM changelog_data ORDER BY created_at DESC LIMIT 1');
+      if (result.rows.length > 0) {
+        console.log('找到更新日志');
+        return result.rows[0].content;
+      }
+      console.log('更新日志为空');
+      return null;
+    } finally {
+      await client.end();
+    }
+  } catch (error) {
+    console.error('读取更新日志失败:', error);
+    return null;
+  }
+}
+
+export async function writeChangelog(content) {
+  console.log('写入更新日志...');
+  try {
+    await initTables();
+    const client = await getClient();
+    try {
+      await client.query('INSERT INTO changelog_data (content) VALUES ($1)', [content]);
+      console.log('更新日志写入成功');
+      return content;
+    } finally {
+      await client.end();
+    }
+  } catch (error) {
+    console.error('写入更新日志失败:', error);
     throw error;
   }
 }

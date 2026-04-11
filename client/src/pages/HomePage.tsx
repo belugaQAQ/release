@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { AppBar } from '../components/Layout/AppBar';
 import { Navigation } from '../components/Layout/Navigation';
 import { useKeyAuth } from '../hooks/useKeyAuth';
-import { getLatestData } from '../utils/api';
+import { getLatestData, getChangelog } from '../utils/api';
 import { LoadingSpinner } from '../components/UI/LoadingSpinner';
 
 interface LatestData {
@@ -81,6 +81,7 @@ export function HomePage() {
   const { logout } = useKeyAuth();
   const navigate = useNavigate();
   const [latestData, setLatestData] = useState<LatestData | null>(null);
+  const [changelog, setChangelog] = useState<string>('');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -90,11 +91,17 @@ export function HomePage() {
   const loadData = async () => {
     setLoading(true);
     try {
-      const response = await getLatestData();
-      const data = (response as any).data || response;
+      const [latestResponse, changelogContent] = await Promise.all([
+        getLatestData(),
+        getChangelog(),
+      ]);
+      
+      const data = (latestResponse as any).data || latestResponse;
       if (data && data.version) {
         setLatestData(data as LatestData);
       }
+      
+      setChangelog(changelogContent);
     } catch (error) {
       console.error('加载数据失败:', error);
     } finally {
@@ -178,7 +185,7 @@ export function HomePage() {
               </div>
               <div 
                 className="changelog-content"
-                dangerouslySetInnerHTML={{ __html: markdownToHtml(latestData.changelog) }}
+                dangerouslySetInnerHTML={{ __html: markdownToHtml(changelog) }}
               />
             </div>
 

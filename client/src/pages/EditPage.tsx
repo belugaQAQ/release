@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { useFormValidation } from '../hooks/useFormValidation';
-import { useApi } from '../hooks/useApi';
 import { useKeyAuth } from '../hooks/useKeyAuth';
 import { AppBar } from '../components/Layout/AppBar';
 import { Navigation } from '../components/Layout/Navigation';
@@ -12,7 +11,7 @@ import { Sha256Field } from '../components/Forms/Sha256Field';
 import { MarkdownField } from '../components/Forms/MarkdownField';
 import { KeyResetter } from '../components/KeyManagement/KeyResetter';
 import { LoadingSpinner } from '../components/UI/LoadingSpinner';
-import { updateLatestData } from '../utils/api';
+import { getLatestData, getChangelog, updateLatestData, updateChangelog } from '../utils/api';
 
 export interface LatestData {
   version: string;
@@ -25,10 +24,13 @@ export interface LatestData {
 
 export function EditPage() {
   const { values, errors, isFormValid, updateField, resetForm } = useFormValidation();
-  const { execute: fetchLatest, loading: loadingLatest } = useApi<LatestData>();
   const { isAuthenticated, keyData, logout } = useKeyAuth();
-  const [submitting, setSubmitting] = useState(false);
+  const [changelogContent, setChangelogContent] = useState('');
+  const [submittingVersion, setSubmittingVersion] = useState(false);
+  const [submittingChangelog, setSubmittingChangelog] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
+  const [changelogSuccess, setChangelogSuccess] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -37,9 +39,14 @@ export function EditPage() {
   }, [isAuthenticated]);
 
   const loadCurrentData = async () => {
+    setLoading(true);
     try {
-      const response = await fetchLatest('/api/latest.json');
-      const data = (response as any).data || response;
+      const [latestResponse, changelogText] = await Promise.all([
+        getLatestData(),
+        getChangelog(),
+      ]);
+      
+      const data = (latestResponse as any).data || latestResponse;
       if (data && data.version) {
         updateField('version', data.version);
         updateField('url', data.url);
@@ -47,19 +54,23 @@ export function EditPage() {
         updateField('changelog', data.changelog);
         updateField('sha256', data.sha256);
       }
+      
+      setChangelogContent(changelogText);
     } catch (error) {
       console.error('加载数据失败:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmitVersion = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!isFormValid || !isAuthenticated) {
       return;
     }
 
-    setSubmitting(true);
+    setSubmittingVersion(true);
 
     try {
       const response = await updateLatestData(
@@ -81,7 +92,29 @@ export function EditPage() {
       console.error('提交失败:', error);
       alert(error.message || '提交失败，请重试');
     } finally {
-      setSubmitting(false);
+      setSubmittingVersion(false);
+    }
+  };
+
+  const handleSubmitChangelog = async () => {
+    if (!isAuthenticated) {
+      return;
+    }
+
+    setSubmittingChangelog(true);
+
+    try {
+      const response = await updateChangelog(changelogContent, keyData);
+
+      if (response.success) {
+        setChangelogSuccess(true);
+        setTimeout(() => setChangelogSuccess(false), 3000);
+      }
+    } catch (error: any) {
+      console.error('更新日志提交失败:', error);
+      alert(error.message || '提交失败，请重试');
+    } finally {
+      setSubmittingChangelog(false);
     }
   };
 
@@ -103,11 +136,18 @@ export function EditPage() {
         {submitSuccess && (
           <mdui-snackbar open>
             <mdui-icon slot="icon" name="check_circle"></mdui-icon>
-            数据更新成功！
+            版本数据更新成功！
           </mdui-snackbar>
         )}
 
-        <form onSubmit={handleSubmit}>
+        {changelogSuccess && (
+          <mdui-snackbar open>
+            <mdui-icon slot="icon" name="check_circle"></mdui-icon>
+            更新日志更新成功！
+          </mdui-snackbar>
+        )}
+
+        <form onSubmit={handleSubmitVersion}>
           <div className="form-fields">
             <VersionField
               value={values.version}
@@ -133,11 +173,6 @@ export function EditPage() {
               error={errors.changelog}
             />
 
-            <MarkdownField
-              value={values.changelog}
-              onChange={(v) => updateField('changelog', v)}
-            />
-
             <Sha256Field
               value={values.sha256}
               onChange={(v) => updateField('sha256', v)}
@@ -149,11 +184,11 @@ export function EditPage() {
                 type="submit"
                 variant="filled"
                 fullWidth
-                loading={submitting}
-                disabled={!isFormValid || submitting}
+                loading={submittingVersion}
+                disabled={!isFormValid || submittingVersion}
               >
                 <mdui-icon name="save" slot="icon"></mdui-icon>
-                提交更新
+                提交版本数据
               </mdui-button>
               <mdui-button
                 variant="text"
@@ -166,11 +201,35 @@ export function EditPage() {
           </div>
         </form>
 
+        <div className="form-fields">
+          <div className="form-section-divider">
+            <span>更新日志 Markdown</span>
+          </div>
+
+          <MarkdownField
+            value={changelogContent}
+            onChange={setChangelogContent}
+          />
+
+          <div className="action-area">
+            <mdui-button
+              variant="filled"
+              fullWidth
+              loading={submittingChangelog}
+              disabled={submittingChangelog}
+              onClick={handleSubmitChangelog}
+            >
+              <mdui-icon name="save" slot="icon"></mdui-icon>
+              保存更新日志
+            </mdui-button>
+          </div>
+        </div>
+
         <div className="key-reset-area">
           <KeyResetter currentKey={keyData} onResetComplete={handleReset} />
         </div>
 
-        {loadingLatest && <LoadingSpinner message="正在加载数据..." />}
+        {loading && <LoadingSpinner message="正在加载数据..." />}
       </div>
 
       <Navigation />

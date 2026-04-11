@@ -54,6 +54,32 @@ async function request<T>(
   }
 }
 
+async function requestText(endpoint: string, options: RequestInit = {}): Promise<string> {
+  const url = `${API_BASE_URL}${endpoint}`;
+
+  try {
+    const response = await fetch(url, {
+      ...options,
+      headers: {
+        ...options.headers,
+      },
+    });
+
+    if (!response.ok) {
+      throw new ApiError(response.status, 'HTTP_ERROR', await response.text());
+    }
+
+    return response.text();
+
+  } catch (error) {
+    if (error instanceof ApiError) {
+      throw error;
+    }
+
+    throw new ApiError(0, 'NETWORK_ERROR', ERROR_MESSAGES.NETWORK_ERROR);
+  }
+}
+
 export const api = {
   get: <T>(endpoint: string) =>
     request<T>(endpoint, { method: 'GET' }),
@@ -120,6 +146,39 @@ export async function updateLatestData(data: any, keyFile: any): Promise<ApiResp
 
 export async function getLatestData(): Promise<ApiResponse> {
   return api.get('/api/latest.json');
+}
+
+export async function getChangelog(): Promise<string> {
+  return requestText('/api/changelog.md');
+}
+
+export async function updateChangelog(content: string, keyFile: any): Promise<ApiResponse> {
+  let actualKeyFile = keyFile;
+  
+  if (!actualKeyFile) {
+    const stored = sessionStorage.getItem('auth_key');
+    if (stored) {
+      try {
+        actualKeyFile = JSON.parse(stored);
+      } catch {
+        console.error('Failed to parse stored key file');
+      }
+    }
+  }
+
+  if (!actualKeyFile) {
+    throw new Error('No authentication key available');
+  }
+
+  const headers: Record<string, string> = {
+    'Authorization': `Bearer ${JSON.stringify(actualKeyFile)}`,
+  };
+  
+  return request('/api/changelog.md', {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({ content }),
+  });
 }
 
 export { ApiError, ApiResponse };
