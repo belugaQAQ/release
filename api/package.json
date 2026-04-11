@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vercel dev",
+    "dev": "echo 'API functions are handled automatically by vercel dev from root directory'",
     "build": "tsc",
     "test": "jest",
     "lint": "eslint . --ext .ts"

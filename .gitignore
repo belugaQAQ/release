@@ -2,11 +2,20 @@
 node_modules/
 .pnp
 .pnp.js
+.yarn/cache
+.yarn/unplugged
+.yarn/build-state.yml
+.yarn/install-state.gz
 
 # Build outputs
 client/dist/
 api/dist/
+dist/
+.build/
+
+# Vercel
 .vercel/
+.now/
 
 # Environment variables
 .env
@@ -14,13 +23,11 @@ api/dist/
 .env.development.local
 .env.test.local
 .env.production.local
+.env.*.local
 
 # Data files (contains sensitive info)
-data/latest.json
-data/keys/
-data/backups/
-data/logs/
-data/rate_limits.json
+data/
+!data/.gitkeep
 
 # IDE
 .vscode/
@@ -28,19 +35,51 @@ data/rate_limits.json
 *.swp
 *.swo
 *~
+.project
+.classpath
+.settings/
 
 # OS
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
 Thumbs.db
+desktop.ini
 
 # Logs
 *.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+lerna-debug.log*
+logs/
 
 # Testing
 coverage/
+.nyc_output/
+jest.config.js
 
 # Misc
 *.tsbuildinfo
+*.js.map
+*.d.ts
+.cache/
+.parcel-cache/
+.next/
+.nuxt/
+
+# Keys and certificates
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+auth_key_*.json
+
+# Backups
+*.backup
+*.bak
+backups/
