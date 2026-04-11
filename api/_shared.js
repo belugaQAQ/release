@@ -1,15 +1,9 @@
 import crypto from 'crypto';
-import fs from 'fs/promises';
-import path from 'path';
 import bcrypt from 'bcryptjs';
+import { kv } from '@vercel/kv';
 
-export const DATA_DIR = path.join(process.env.TMPDIR || '/tmp', 'stickyhomeworks-data');
-
-export async function ensureDataDir() {
-  await fs.mkdir(path.join(DATA_DIR, 'backups'), { recursive: true });
-  await fs.mkdir(path.join(DATA_DIR, 'keys'), { recursive: true });
-  await fs.mkdir(path.join(DATA_DIR, 'logs'), { recursive: true });
-}
+const KEY_REGISTRY_KEY = 'stickyhomeworks_key_registry';
+const LATEST_DATA_KEY = 'stickyhomeworks_latest_data';
 
 export function generateKeyPair() {
   return {
@@ -38,40 +32,48 @@ export function generateSeed() {
 
 export async function readKeyRegistry() {
   try {
-    const filePath = path.join(DATA_DIR, 'keys', 'key_registry.json');
-    const content = await fs.readFile(filePath, 'utf-8');
-    return JSON.parse(content);
-  } catch (error) {
-    if (error.code === 'ENOENT') {
-      return { keys: [], metadata: { totalKeys: 0, lastRotated: '', totalResets: 0 } };
+    const data = await kv.get(KEY_REGISTRY_KEY);
+    if (data) {
+      return typeof data === 'string' ? JSON.parse(data) : data;
     }
-    throw error;
+    return { keys: [], metadata: { totalKeys: 0, lastRotated: '', totalResets: 0 } };
+  } catch (error) {
+    console.error('读取密钥注册表失败:', error);
+    return { keys: [], metadata: { totalKeys: 0, lastRotated: '', totalResets: 0 } };
   }
 }
 
 export async function writeKeyRegistry(registry) {
-  await ensureDataDir();
-  const filePath = path.join(DATA_DIR, 'keys', 'key_registry.json');
-  await fs.writeFile(filePath, JSON.stringify(registry, null, 2), 'utf-8');
-}
-
-const LATEST_FILE = path.join(DATA_DIR, 'latest.json');
-
-export async function readLatestData() {
   try {
-    const content = await fs.readFile(LATEST_FILE, 'utf-8');
-    return JSON.parse(content);
+    await kv.set(KEY_REGISTRY_KEY, JSON.stringify(registry));
   } catch (error) {
-    if (error.code === 'ENOENT') return null;
+    console.error('写入密钥注册表失败:', error);
     throw error;
   }
 }
 
+export async function readLatestData() {
+  try {
+    const data = await kv.get(LATEST_DATA_KEY);
+    if (data) {
+      return typeof data === 'string' ? JSON.parse(data) : data;
+    }
+    return null;
+  } catch (error) {
+    console.error('读取最新数据失败:', error);
+    return null;
+  }
+}
+
 export async function writeLatestData(data) {
-  await ensureDataDir();
-  const fullData = { ...data, releaseDate: new Date().toISOString() };
-  await fs.writeFile(LATEST_FILE, JSON.stringify(fullData, null, 2), 'utf-8');
-  return fullData;
+  try {
+    const fullData = { ...data, releaseDate: new Date().toISOString() };
+    await kv.set(LATEST_DATA_KEY, JSON.stringify(fullData));
+    return fullData;
+  } catch (error) {
+    console.error('写入最新数据失败:', error);
+    throw error;
+  }
 }
 
 export async function hashKey(masterKeyBase64) {
