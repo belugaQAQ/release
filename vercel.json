@@ -1,7 +1,7 @@
 {
   "version": 2,
   "buildCommand": "npm run vercel-build",
-  "installCommand": "npm install && cd client && npm install",
+  "installCommand": "pnpm install --no-frozen-lockfile && cd client && pnpm install --no-frozen-lockfile",
   "outputDirectory": "client/dist",
   "headers": [
     {
