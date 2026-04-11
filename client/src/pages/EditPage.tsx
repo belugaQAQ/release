@@ -9,6 +9,7 @@ import { UrlField } from '../components/Forms/UrlField';
 import { SizeField } from '../components/Forms/SizeField';
 import { ChangelogField } from '../components/Forms/ChangelogField';
 import { Sha256Field } from '../components/Forms/Sha256Field';
+import { MarkdownField } from '../components/Forms/MarkdownField';
 import { KeyResetter } from '../components/KeyManagement/KeyResetter';
 import { LoadingSpinner } from '../components/UI/LoadingSpinner';
 import { updateLatestData } from '../utils/api';
@@ -130,6 +131,11 @@ export function EditPage() {
               value={values.changelog}
               onChange={(v) => updateField('changelog', v)}
               error={errors.changelog}
+            />
+
+            <MarkdownField
+              value={values.changelog}
+              onChange={(v) => updateField('changelog', v)}
             />
 
             <Sha256Field

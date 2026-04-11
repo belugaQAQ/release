@@ -58,6 +58,25 @@ function getDateString(): string {
   });
 }
 
+function markdownToHtml(markdown: string): string {
+  if (!markdown) return '<p>暂无更新日志</p>';
+  
+  let html = markdown
+    .replace(/```(\w+)?\n([\s\S]*?)```/g, '<pre><code>$2</code></pre>')
+    .replace(/`([^`]+)`/g, '<code>$1</code>')
+    .replace(/^### (.*$)/gim, '<h3>$1</h3>')
+    .replace(/^## (.*$)/gim, '<h2>$1</h2>')
+    .replace(/^# (.*$)/gim, '<h1>$1</h1>')
+    .replace(/^\- (.*$)/gim, '<li>$1</li>')
+    .replace(/^\* (.*$)/gim, '<li>$1</li>')
+    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.*?)\*/g, '<em>$1</em>')
+    .replace(/\n\n/g, '</p><p>')
+    .replace(/\n/g, '<br>');
+  
+  return `<p>${html}</p>`;
+}
+
 export function HomePage() {
   const { logout } = useKeyAuth();
   const navigate = useNavigate();
@@ -140,13 +159,6 @@ export function HomePage() {
               </div>
 
               <div className="data-item">
-                <span className="data-label">更新日志 (Changelog)</span>
-                <span className="data-value" style={{ whiteSpace: 'pre-wrap' }}>
-                  {latestData.changelog}
-                </span>
-              </div>
-
-              <div className="data-item">
                 <span className="data-label">SHA256 校验值</span>
                 <span className="data-value data-value--code">{latestData.sha256}</span>
               </div>
@@ -155,6 +167,19 @@ export function HomePage() {
                 <span className="data-label">发布时间 (Release Date)</span>
                 <span className="data-value">{formatDate(latestData.releaseDate)}</span>
               </div>
+            </div>
+
+            <div className="data-section changelog-section">
+              <div className="data-section-header">
+                <span className="data-section-title">
+                  <mdui-icon name="file_text" style={{ color: 'var(--md-sys-color-primary)' }}></mdui-icon>
+                  更新日志 (Changelog)
+                </span>
+              </div>
+              <div 
+                className="changelog-content"
+                dangerouslySetInnerHTML={{ __html: markdownToHtml(latestData.changelog) }}
+              />
             </div>
 
             <div className="action-area">
