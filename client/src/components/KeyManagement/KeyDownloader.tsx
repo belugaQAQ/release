@@ -1,0 +1,69 @@
+import React, { useState } from 'react';
+
+interface KeyDownloaderProps {
+  keyFileData: object;
+  onDownloadComplete: () => void;
+}
+
+export function KeyDownloader({ keyFileData, onDownloadComplete }: KeyDownloaderProps) {
+  const [downloading, setDownloading] = useState(false);
+
+  const handleDownload = async () => {
+    setDownloading(true);
+
+    try {
+      const jsonString = JSON.stringify(keyFileData, null, 2);
+      const blob = new Blob([jsonString], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `auth_key_${new Date().toISOString().slice(0, 10)}.json`;
+
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      setTimeout(() => {
+        onDownloadComplete();
+      }, 1500);
+
+    } catch (error) {
+      console.error('下载失败:', error);
+      alert('下载失败，请重试');
+    } finally {
+      setDownloading(false);
+    }
+  };
+
+  return (
+    <mdui-dialog headline="🔑 重要：下载您的密钥文件" open>
+      <div style={{ padding: '24px', maxWidth: '500px' }}>
+        <mdui-alert variant="warning" style={{ marginBottom: '16px' }}>
+          这是您<strong>唯一</strong>的密钥文件，请立即下载并保存到安全位置！
+        </mdui-alert>
+
+        <ul style={{ lineHeight: '1.8', color: '#666', paddingLeft: '20px' }}>
+          <li>📁 文件将保存为 <code>.json</code> 格式</li>
+          <li>🔒 请勿分享给他人</li>
+          <li>💾 建议备份到多个位置</li>
+          <li>⚠️ 丢失后将无法恢复</li>
+        </ul>
+
+        <mdui-button
+          fullWidth
+          variant="filled"
+          onClick={handleDownload}
+          loading={downloading}
+          disabled={downloading}
+          style={{ marginTop: '20px' }}
+        >
+          {downloading ? '正在生成...' : '⬇️ 下载密钥文件'}
+        </mdui-button>
+      </div>
+    </mdui-dialog>
+  );
+}
+
+export default KeyDownloader;
