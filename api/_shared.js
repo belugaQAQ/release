@@ -3,7 +3,7 @@ import fs from 'fs/promises';
 import path from 'path';
 import bcrypt from 'bcryptjs';
 
-export const DATA_DIR = path.join(process.cwd(), 'data');
+export const DATA_DIR = path.join(process.env.TMPDIR || '/tmp', 'stickyhomeworks-data');
 
 export async function ensureDataDir() {
   await fs.mkdir(path.join(DATA_DIR, 'backups'), { recursive: true });
