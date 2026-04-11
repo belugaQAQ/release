@@ -63,19 +63,12 @@ export function KeyImporter({ onImportSuccess }: KeyImporterProps) {
 
   return (
     <div
+      className={`upload-zone ${dragOver ? 'upload-zone--active' : ''}`}
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
       onClick={() => fileInputRef.current?.click()}
-      style={{
-        border: `3px dashed ${dragOver ? '#6750A4' : '#ccc'}`,
-        borderRadius: '12px',
-        padding: '48px',
-        textAlign: 'center',
-        backgroundColor: dragOver ? '#F3EDF7' : '#fafafa',
-        transition: 'all 0.3s ease',
-        cursor: 'pointer',
-      }}
+      tabIndex={0}
     >
       <input
         ref={fileInputRef}
@@ -92,27 +85,21 @@ export function KeyImporter({ onImportSuccess }: KeyImporterProps) {
         <mdui-circular-progress></mdui-circular-progress>
       ) : (
         <>
-          <mdui-icon name="cloud_upload" size="64" style={{ color: dragOver ? '#6750A4' : '#999' }}></mdui-icon>
-
-          <h3 style={{ marginTop: '16px', color: '#333' }}>
-            {dragOver ? '释放以上传密钥文件' : '拖放密钥文件到这里'}
-          </h3>
-
-          <p style={{ color: '#666', marginTop: '8px' }}>
-            或者{' '}
-            <span style={{ color: '#6750A4', fontWeight: 'bold' }}>点击选择文件</span>
-          </p>
-
-          <p style={{ fontSize: '12px', color: '#999', marginTop: '16px' }}>
-            支持 .json 格式的密钥文件
-          </p>
-
-          {errorMessage && (
-            <mdui-alert variant="danger" style={{ marginTop: '16px' }}>
-              ❌ {errorMessage}
-            </mdui-alert>
-          )}
+          <div className="upload-icon-wrapper">
+            <mdui-icon name="cloud_upload" style={{ fontSize: '52px' }}></mdui-icon>
+          </div>
+          <div className="upload-text">点击或拖放上传密钥文件</div>
+          <div className="upload-hint">支持 .json 格式</div>
         </>
+      )}
+
+      {errorMessage && (
+        <mdui-linear-progress style={{ marginTop: '16px' }}></mdui-linear-progress>
+      )}
+      {errorMessage && (
+        <p style={{ color: 'var(--md-sys-color-error)', fontSize: '13px', marginTop: '8px' }}>
+          {errorMessage}
+        </p>
       )}
     </div>
   );

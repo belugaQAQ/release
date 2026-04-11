@@ -1,8 +1,7 @@
 {
   "version": 2,
   "buildCommand": "npm run vercel-build",
-  "devCommand": "npm run dev",
-  "installCommand": "npm install && cd client && npm install && cd .. && cd api && npm install && cd ..",
+  "installCommand": "npm install && cd client && npm install",
   "outputDirectory": "client/dist",
   "headers": [
     {
@@ -42,18 +41,6 @@
           "value": "DENY"
         }
       ]
-    }
-  ],
-  "functions": {
-    "api/**/*.{ts,js}": {
-      "maxDuration": 30,
-      "memory": 1024
-    }
-  },
-  "crons": [
-    {
-      "path": "/api/health",
-      "schedule": "0 0 * * *"
     }
   ],
   "rewrites": [

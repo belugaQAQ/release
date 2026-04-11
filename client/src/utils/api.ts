@@ -26,11 +26,11 @@ async function request<T>(
 
   try {
     const response = await fetch(url, {
+      ...options,
       headers: {
         'Content-Type': 'application/json',
         ...options.headers,
       },
-      ...options,
     });
 
     const data = await response.json();
@@ -64,6 +64,63 @@ export const api = {
       body: body ? JSON.stringify(body) : undefined,
     }),
 };
+
+export async function downloadKeyFile(): Promise<ApiResponse> {
+  return api.post('/api/generate-key');
+}
+
+export async function verifyKeyFile(keyFile: any): Promise<{ valid: boolean; error?: string; keyId?: string; message?: string }> {
+  const response = await api.post('/api/verify-key', { keyFile });
+  return response.data || response;
+}
+
+export async function resetKey(reason: string): Promise<ApiResponse> {
+  const keyFile = localStorage.getItem('keyFile');
+  const headers: Record<string, string> = {};
+  
+  if (keyFile) {
+    headers['Authorization'] = `Bearer ${keyFile}`;
+  }
+  
+  return request('/api/reset-key', {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({ reason }),
+  });
+}
+
+export async function updateLatestData(data: any, keyFile: any): Promise<ApiResponse> {
+  let actualKeyFile = keyFile;
+  
+  if (!actualKeyFile) {
+    const stored = sessionStorage.getItem('auth_key');
+    if (stored) {
+      try {
+        actualKeyFile = JSON.parse(stored);
+      } catch {
+        console.error('Failed to parse stored key file');
+      }
+    }
+  }
+
+  if (!actualKeyFile) {
+    throw new Error('No authentication key available');
+  }
+
+  const headers: Record<string, string> = {
+    'Authorization': `Bearer ${JSON.stringify(actualKeyFile)}`,
+  };
+  
+  return request('/api/update', {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({ data }),
+  });
+}
+
+export async function getLatestData(): Promise<ApiResponse> {
+  return api.get('/api/latest.json');
+}
 
 export { ApiError, ApiResponse };
 export default api;

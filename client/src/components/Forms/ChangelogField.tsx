@@ -8,14 +8,19 @@ interface ChangelogFieldProps {
 
 export function ChangelogField({ value, onChange, error }: ChangelogFieldProps) {
   return (
-    <mdui-text-field
-      label="变更日志"
-      value={value}
-      onChange={(e: any) => onChange(e.target.value)}
-      rows={4}
-      error={error || undefined}
-      variant="outlined"
-    ></mdui-text-field>
+    <div className="form-field">
+      <mdui-text-field
+        label="更新日志"
+        value={value}
+        onInput={(e: any) => onChange(e.target.value)}
+        rows={3}
+        autosize
+        variant="filled"
+        icon="description"
+        error={error || undefined}
+        helper="支持多行文本"
+      ></mdui-text-field>
+    </div>
   );
 }
 

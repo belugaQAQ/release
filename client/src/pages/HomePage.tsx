@@ -1,121 +1,195 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { AppBar } from '../components/Layout/AppBar';
+import { Navigation } from '../components/Layout/Navigation';
 import { useKeyAuth } from '../hooks/useKeyAuth';
-import { KeyImporter } from '../components/KeyManagement/KeyImporter';
-import { KeyDownloader } from '../components/KeyManagement/KeyDownloader';
-import api from '../utils/api';
+import { getLatestData } from '../utils/api';
+import { LoadingSpinner } from '../components/UI/LoadingSpinner';
+
+interface LatestData {
+  version: string;
+  url: string;
+  size: number;
+  changelog: string;
+  sha256: string;
+  releaseDate: string;
+}
+
+function formatFileSize(bytes: number): string {
+  if (bytes === 0) return '0 B';
+  const k = 1024;
+  const sizes = ['B', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
+
+function formatDate(dateStr: string): string {
+  try {
+    const date = new Date(dateStr);
+    return date.toLocaleString('zh-CN', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false,
+    });
+  } catch {
+    return dateStr;
+  }
+}
+
+function getGreetingTime(): string {
+  const hour = new Date().getHours();
+  if (hour < 6) return '夜深了';
+  if (hour < 12) return '早上好';
+  if (hour < 14) return '中午好';
+  if (hour < 18) return '下午好';
+  return '晚上好';
+}
+
+function getDateString(): string {
+  return new Date().toLocaleDateString('zh-CN', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    weekday: 'long',
+  });
+}
 
 export function HomePage() {
-  const { isAuthenticated, isLoading, verifyKey, checkExistingSession } = useKeyAuth();
-  const [showDownloader, setShowDownloader] = useState(false);
-  const [keyFileData, setKeyFileData] = useState<object | null>(null);
-  const [generating, setGenerating] = useState(false);
+  const { logout } = useKeyAuth();
+  const navigate = useNavigate();
+  const [latestData, setLatestData] = useState<LatestData | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    checkForExistingKey();
+    loadData();
   }, []);
 
-  const checkForExistingKey = async () => {
-    const hasSession = checkExistingSession();
-    if (!hasSession) {
-      await checkIfKeyExistsOnServer();
-    }
-  };
-
-  const checkIfKeyExistsOnServer = async () => {
+  const loadData = async () => {
+    setLoading(true);
     try {
-      const response = await api.get('/verify-key', {
-        headers: { 'X-Check-Only': 'true' },
-      });
-      if (response.hasExistingKey) {
-        setShowDownloader(true);
-      }
-    } catch {
-      setGenerating(true);
-      await generateNewKey();
-    }
-  };
-
-  const generateNewKey = async () => {
-    try {
-      const response = await api.post('/generate-key');
-      if (response.success) {
-        setKeyFileData(response.data);
-        setShowDownloader(true);
+      const response = await getLatestData();
+      const data = (response as any).data || response;
+      if (data && data.version) {
+        setLatestData(data as LatestData);
       }
     } catch (error) {
-      console.error('生成密钥失败:', error);
+      console.error('加载数据失败:', error);
     } finally {
-      setGenerating(false);
+      setLoading(false);
     }
   };
 
-  const handleImportSuccess = async (keyData: any) => {
-    const success = await verifyKey(keyData);
-    if (success) {
-      window.location.href = '/edit';
-    }
+  const handleLogout = () => {
+    logout();
   };
 
-  const handleDownloadComplete = () => {
-    setShowDownloader(false);
-    window.location.href = '/edit';
+  const handleEdit = () => {
+    navigate('/edit');
   };
-
-  if (isLoading || generating) {
-    return (
-      <div style={{ padding: '48px', textAlign: 'center' }}>
-        <mdui-circular-progress></mdui-circular-progress>
-        <p style={{ marginTop: '16px', color: '#666' }}>
-          {generating ? '正在生成密钥...' : '正在验证...'}
-        </p>
-      </div>
-    );
-  }
-
-  if (isAuthenticated) {
-    return (
-      <div style={{ padding: '48px', textAlign: 'center' }}>
-        <mdui-icon name="check_circle" size="64" style={{ color: '#056E33' }}></mdui-icon>
-        <h2 style={{ marginTop: '16px', color: '#056E33' }}>✅ 认证成功</h2>
-        <p style={{ color: '#666', marginTop: '8px' }}>正在跳转到编辑页面...</p>
-        {setTimeout(() => (window.location.href = '/edit'), 1000)}
-      </div>
-    );
-  }
 
   return (
-    <div style={{ maxWidth: '600px', margin: '0 auto', padding: '24px' }}>
-      <h1 style={{ textAlign: 'center', marginBottom: '32px', color: '#6750A4' }}>
-        🔐 StickyHomeworks 更新管理器
-      </h1>
+    <div className="page-with-nav">
+      <AppBar
+        title="首页"
+        actions={
+          <mdui-button-icon icon="logout" onClick={handleLogout}></mdui-button-icon>
+        }
+      />
 
-      {showDownloader && keyFileData ? (
-        <KeyDownloader
-          keyFileData={keyFileData}
-          onDownloadComplete={handleDownloadComplete}
-        />
-      ) : (
-        <>
-          <div
-            style={{
-              backgroundColor: '#F3EDF7',
-              border: '1px solid #D0BCFF',
-              borderRadius: '8px',
-              padding: '16px',
-              marginBottom: '24px',
-            }}
-          >
-            <p style={{ fontSize: '14px', lineHeight: '1.6', color: '#4F378B' }}>
-              <strong>欢迎使用！</strong> 为了保障数据安全，您需要使用密钥文件进行身份验证。
-              {showDownloader
-                ? ' 系统已为您生成新的密钥文件，请立即下载保存。'
-                : ' 请上传您的密钥文件以继续。'}
-            </p>
+      <div className="page-content">
+        <div className="greeting-card">
+          <div className="greeting-text">
+            <mdui-icon name="waving_hand" style={{ fontSize: '28px' }}></mdui-icon>
+            {getGreetingTime()}，管理员
           </div>
+          <div className="greeting-subtext">今天是 {getDateString()}</div>
+        </div>
 
-          <KeyImporter onImportSuccess={handleImportSuccess} />
-        </>
-      )}
+        {loading ? (
+          <LoadingSpinner message="正在加载数据..." />
+        ) : latestData ? (
+          <>
+            <div className="data-section">
+              <div className="data-section-header">
+                <span className="data-section-title">
+                  <mdui-icon name="info" style={{ color: 'var(--md-sys-color-primary)' }}></mdui-icon>
+                  当前版本信息
+                </span>
+                <span className="version-chip">v{latestData.version}</span>
+              </div>
+
+              <div className="data-item">
+                <span className="data-label">版本号 (Version)</span>
+                <span className="data-value">{latestData.version}</span>
+              </div>
+
+              <div className="data-item">
+                <span className="data-label">下载链接 (URL)</span>
+                <span className="data-value data-value--url">{latestData.url}</span>
+              </div>
+
+              <div className="data-item">
+                <span className="data-label">文件大小 (Size)</span>
+                <span className="data-value">
+                  {formatFileSize(latestData.size)} ({latestData.size.toLocaleString()} 字节)
+                </span>
+              </div>
+
+              <div className="data-item">
+                <span className="data-label">更新日志 (Changelog)</span>
+                <span className="data-value" style={{ whiteSpace: 'pre-wrap' }}>
+                  {latestData.changelog}
+                </span>
+              </div>
+
+              <div className="data-item">
+                <span className="data-label">SHA256 校验值</span>
+                <span className="data-value data-value--code">{latestData.sha256}</span>
+              </div>
+
+              <div className="data-item">
+                <span className="data-label">发布时间 (Release Date)</span>
+                <span className="data-value">{formatDate(latestData.releaseDate)}</span>
+              </div>
+            </div>
+
+            <div className="action-area">
+              <mdui-button variant="filled" fullWidth onClick={handleEdit}>
+                <mdui-icon name="edit" slot="icon"></mdui-icon>
+                编辑更新信息
+              </mdui-button>
+              <mdui-button variant="outlined" fullWidth onClick={loadData}>
+                <mdui-icon name="refresh" slot="icon"></mdui-icon>
+                刷新数据
+              </mdui-button>
+            </div>
+          </>
+        ) : (
+          <div className="data-section">
+            <div className="data-section-header">
+              <span className="data-section-title">
+                <mdui-icon name="info" style={{ color: 'var(--md-sys-color-primary)' }}></mdui-icon>
+                当前版本信息
+              </span>
+            </div>
+            <p style={{ color: 'var(--md-sys-color-on-surface-variant)', textAlign: 'center', padding: '24px' }}>
+              暂无数据，请先编辑更新信息
+            </p>
+            <div className="action-area">
+              <mdui-button variant="filled" fullWidth onClick={handleEdit}>
+                <mdui-icon name="edit" slot="icon"></mdui-icon>
+                编辑更新信息
+              </mdui-button>
+            </div>
+          </div>
+        )}
+      </div>
+
+      <Navigation />
     </div>
   );
 }

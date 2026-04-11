@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import api from '../utils/api';
 
 interface KeyAuthState {
@@ -8,7 +8,15 @@ interface KeyAuthState {
   error: string | null;
 }
 
-export function useKeyAuth() {
+interface KeyAuthContextType extends KeyAuthState {
+  verifyKey: (keyFileContent: any) => Promise<boolean>;
+  logout: () => void;
+  checkExistingSession: () => boolean;
+}
+
+const KeyAuthContext = createContext<KeyAuthContextType | null>(null);
+
+export function KeyAuthProvider({ children }: { children: React.ReactNode }) {
   const [state, setState] = useState<KeyAuthState>({
     isAuthenticated: false,
     isLoading: false,
@@ -20,9 +28,11 @@ export function useKeyAuth() {
     setState((prev) => ({ ...prev, isLoading: true, error: null }));
 
     try {
-      const response = await api.post('/verify-key', { keyFile: keyFileContent });
+      const response = await api.post('/api/verify-key', { keyFile: keyFileContent });
 
-      if (response.valid) {
+      const data = response.data || response;
+      
+      if (data.valid) {
         setState({
           isAuthenticated: true,
           isLoading: false,
@@ -37,11 +47,12 @@ export function useKeyAuth() {
         setState((prev) => ({
           ...prev,
           isLoading: false,
-          error: response.error || '密钥验证失败',
+          error: data.error || response.error || '密钥验证失败',
         }));
         return false;
       }
     } catch (error: any) {
+      console.error('验证过程出错:', error);
       setState((prev) => ({
         ...prev,
         isLoading: false,
@@ -80,10 +91,28 @@ export function useKeyAuth() {
     return false;
   }, []);
 
-  return {
-    ...state,
-    verifyKey,
-    logout,
-    checkExistingSession,
-  };
+  useEffect(() => {
+    checkExistingSession();
+  }, [checkExistingSession]);
+
+  return (
+    <KeyAuthContext.Provider
+      value={{
+        ...state,
+        verifyKey,
+        logout,
+        checkExistingSession,
+      }}
+    >
+      {children}
+    </KeyAuthContext.Provider>
+  );
+}
+
+export function useKeyAuth() {
+  const context = useContext(KeyAuthContext);
+  if (!context) {
+    throw new Error('useKeyAuth must be used within a KeyAuthProvider');
+  }
+  return context;
 }

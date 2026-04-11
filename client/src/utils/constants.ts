@@ -1,4 +1,4 @@
-export const API_BASE_URL = '/api';
+export const API_BASE_URL = '';
 
 export const VALIDATION_RULES = {
   VERSION_PATTERN: /^\d+\.\d+\.\d+\.\d+$/,

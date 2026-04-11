@@ -8,15 +8,19 @@ interface UrlFieldProps {
 
 export function UrlField({ value, onChange, error }: UrlFieldProps) {
   return (
-    <mdui-text-field
-      label="下载链接 (URL)"
-      value={value}
-      onChange={(e: any) => onChange(e.target.value)}
-      helper="完整的下载地址，包含协议（http/https）和域名"
-      error={error || undefined}
-      clearable
-      variant="outlined"
-    ></mdui-text-field>
+    <div className="form-field">
+      <mdui-text-field
+        label="下载链接 (URL)"
+        type="url"
+        value={value}
+        onInput={(e: any) => onChange(e.target.value)}
+        helper="完整的下载地址，包含协议（http/https）和域名"
+        clearable
+        variant="filled"
+        icon="link"
+        error={error || undefined}
+      ></mdui-text-field>
+    </div>
   );
 }
 

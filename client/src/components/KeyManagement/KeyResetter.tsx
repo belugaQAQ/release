@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import api from '../../utils/api';
 
 interface KeyResetterProps {
   currentKey: any;
@@ -17,27 +16,26 @@ export function KeyResetter({ currentKey, onResetComplete }: KeyResetterProps) {
 
   const handleConfirmReset = async () => {
     if (!resetReason.trim()) {
-      alert('请输入重置原因');
       return;
     }
 
     setLoading(true);
 
     try {
-      const response = await api.post('/reset-key', {
-        reason: resetReason,
-        force: false,
-      }, {
+      const response = await fetch('/api/reset-key', {
+        method: 'POST',
         headers: {
+          'Content-Type': 'application/json',
           'Authorization': `Bearer ${JSON.stringify(currentKey)}`,
         },
+        body: JSON.stringify({ reason: resetReason, force: false }),
       });
 
-      if (response.success) {
-        alert('密钥重置成功！正在准备下载新密钥...');
-        
+      const data = await response.json();
+
+      if (data.success) {
         const newKeyBlob = new Blob(
-          [JSON.stringify(response.data.newKeyFile, null, 2)],
+          [JSON.stringify(data.data.newKeyFile, null, 2)],
           { type: 'application/json' }
         );
         const url = URL.createObjectURL(newKeyBlob);
@@ -47,10 +45,10 @@ export function KeyResetter({ currentKey, onResetComplete }: KeyResetterProps) {
         link.click();
         URL.revokeObjectURL(url);
 
-        onResetComplete(response.data.newKeyFile);
+        onResetComplete(data.data.newKeyFile);
         setShowConfirmDialog(false);
       } else {
-        alert(response.message || '重置失败');
+        alert(data.message || '重置失败');
       }
     } catch (error: any) {
       alert(error.message || '网络错误，请重试');
@@ -64,51 +62,38 @@ export function KeyResetter({ currentKey, onResetComplete }: KeyResetterProps) {
       <mdui-button
         variant="text"
         onClick={handleResetClick}
-        style={{ color: '#B3261E' }}
+        style={{ color: 'var(--md-sys-color-error)' }}
       >
-        🔄 重置密钥
+        <mdui-icon name="key" slot="icon"></mdui-icon>
+        重置密钥
       </mdui-button>
 
       <mdui-dialog
-        headline="⚠️ 确认重置密钥"
+        headline="确认重置密钥"
         open={showConfirmDialog}
         onClose={() => setShowConfirmDialog(false)}
       >
         <div style={{ padding: '24px' }}>
-          <mdui-alert variant="danger" style={{ marginBottom: '16px' }}>
-            <strong>警告：</strong>此操作将使当前密钥<strong>立即失效</strong>！
-          </mdui-alert>
+          <div className="data-section" style={{ borderColor: 'var(--md-sys-color-error)', marginBottom: '16px' }}>
+            <p style={{ color: 'var(--md-sys-color-error)', fontWeight: 500 }}>
+              此操作将使当前密钥立即失效！
+            </p>
+          </div>
 
           <div style={{ marginBottom: '16px' }}>
-            <label
-              style={{
-                display: 'block',
-                fontWeight: 'bold',
-                marginBottom: '8px',
-              }}
-            >
-              请输入重置原因（必填）：
-            </label>
             <mdui-text-field
+              label="重置原因（必填）"
               value={resetReason}
-              onChange={(e: any) => setResetReason(e.target.value)}
+              onInput={(e: any) => setResetReason(e.target.value)}
               placeholder="例如：密钥丢失 / 怀疑泄露 / 定期轮换"
               rows={3}
+              variant="filled"
             ></mdui-text-field>
           </div>
 
-          <div
-            style={{
-              backgroundColor: '#FFF8F8',
-              border: '1px solid #F28B82',
-              borderRadius: '8px',
-              padding: '12px',
-              fontSize: '14px',
-              lineHeight: '1.6',
-            }}
-          >
-            <strong>📋 重置后的影响：</strong>
-            <ul style={{ marginTop: '8px', paddingLeft: '20px' }}>
+          <div className="data-section">
+            <p style={{ fontWeight: 500, marginBottom: '8px' }}>重置后的影响：</p>
+            <ul style={{ paddingLeft: '20px', lineHeight: '1.8', color: 'var(--md-sys-color-on-surface-variant)' }}>
               <li>当前密钥将立即失效</li>
               <li>系统将生成全新的密钥文件</li>
               <li>您需要重新下载并保存新密钥</li>
@@ -137,7 +122,7 @@ export function KeyResetter({ currentKey, onResetComplete }: KeyResetterProps) {
               onClick={handleConfirmReset}
               loading={loading}
               disabled={loading || !resetReason.trim()}
-              style={{ backgroundColor: '#B3261E' }}
+              style={{ '--md-button-container-color': 'var(--md-sys-color-error)' } as any}
             >
               {loading ? '重置中...' : '确认重置'}
             </mdui-button>

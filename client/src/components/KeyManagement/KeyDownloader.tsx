@@ -38,17 +38,19 @@ export function KeyDownloader({ keyFileData, onDownloadComplete }: KeyDownloader
   };
 
   return (
-    <mdui-dialog headline="🔑 重要：下载您的密钥文件" open>
+    <mdui-dialog headline="重要：下载您的密钥文件" open>
       <div style={{ padding: '24px', maxWidth: '500px' }}>
-        <mdui-alert variant="warning" style={{ marginBottom: '16px' }}>
-          这是您<strong>唯一</strong>的密钥文件，请立即下载并保存到安全位置！
-        </mdui-alert>
+        <div className="data-section" style={{ borderColor: 'var(--md-sys-color-primary)', marginBottom: '16px' }}>
+          <p style={{ color: 'var(--md-sys-color-on-primary-container)', fontWeight: 500 }}>
+            这是您唯一的密钥文件，请立即下载并保存到安全位置！
+          </p>
+        </div>
 
-        <ul style={{ lineHeight: '1.8', color: '#666', paddingLeft: '20px' }}>
-          <li>📁 文件将保存为 <code>.json</code> 格式</li>
-          <li>🔒 请勿分享给他人</li>
-          <li>💾 建议备份到多个位置</li>
-          <li>⚠️ 丢失后将无法恢复</li>
+        <ul style={{ lineHeight: '1.8', color: 'var(--md-sys-color-on-surface-variant)', paddingLeft: '20px' }}>
+          <li>文件将保存为 .json 格式</li>
+          <li>请勿分享给他人</li>
+          <li>建议备份到多个位置</li>
+          <li>丢失后将无法恢复</li>
         </ul>
 
         <mdui-button
@@ -59,7 +61,8 @@ export function KeyDownloader({ keyFileData, onDownloadComplete }: KeyDownloader
           disabled={downloading}
           style={{ marginTop: '20px' }}
         >
-          {downloading ? '正在生成...' : '⬇️ 下载密钥文件'}
+          <mdui-icon name="download" slot="icon"></mdui-icon>
+          {downloading ? '正在生成...' : '下载密钥文件'}
         </mdui-button>
       </div>
     </mdui-dialog>
