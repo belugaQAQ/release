@@ -10,8 +10,13 @@ export default async function handler(req, res) {
     if (!data) {
       return res.status(404).json({ success: false, error: 'NOT_FOUND', message: '暂无更新数据' });
     }
+    
     res.setHeader('Content-Type', 'application/json; charset=utf-8');
-    res.setHeader('Cache-Control', 'public, max-age=300, s-maxage=600');
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+    res.setHeader('Surrogate-Control', 'no-store');
+    
     return res.status(200).json(data);
   } catch (error) {
     console.error('读取数据失败:', error);
