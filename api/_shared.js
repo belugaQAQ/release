@@ -29,10 +29,13 @@ export function generateSeed() {
 
 async function getClient() {
   if (!process.env.DATABASE_URL) {
+    console.error('DATABASE_URL 环境变量未设置');
     throw new Error('DATABASE_URL 环境变量未设置');
   }
+  console.log('尝试连接数据库:', process.env.DATABASE_URL ? '已配置' : '未配置');
   const client = new Client({ connectionString: process.env.DATABASE_URL });
   await client.connect();
+  console.log('数据库连接成功');
   return client;
 }
 
@@ -53,19 +56,23 @@ async function initTables() {
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     `);
+    console.log('表初始化成功');
   } finally {
     await client.end();
   }
 }
 
 export async function readKeyRegistry() {
+  console.log('读取密钥注册表...');
   try {
     const client = await getClient();
     try {
       const result = await client.query('SELECT key_data FROM key_registry ORDER BY created_at DESC LIMIT 1');
       if (result.rows.length > 0) {
+        console.log('找到密钥注册表数据');
         return result.rows[0].key_data;
       }
+      console.log('密钥注册表为空，返回默认值');
       return { keys: [], metadata: { totalKeys: 0, lastRotated: '', totalResets: 0 } };
     } finally {
       await client.end();
@@ -77,11 +84,13 @@ export async function readKeyRegistry() {
 }
 
 export async function writeKeyRegistry(registry) {
+  console.log('写入密钥注册表...');
   try {
     await initTables();
     const client = await getClient();
     try {
-      await client.query('INSERT INTO key_registry (key_data) VALUES ($1)', [registry]);
+      await client.query('INSERT INTO key_registry (key_data) VALUES ($1)', [JSON.stringify(registry)]);
+      console.log('密钥注册表写入成功');
     } finally {
       await client.end();
     }
@@ -92,13 +101,16 @@ export async function writeKeyRegistry(registry) {
 }
 
 export async function readLatestData() {
+  console.log('读取最新数据...');
   try {
     const client = await getClient();
     try {
       const result = await client.query('SELECT data FROM latest_data ORDER BY created_at DESC LIMIT 1');
       if (result.rows.length > 0) {
+        console.log('找到最新数据');
         return result.rows[0].data;
       }
+      console.log('最新数据为空');
       return null;
     } finally {
       await client.end();
@@ -110,12 +122,14 @@ export async function readLatestData() {
 }
 
 export async function writeLatestData(data) {
+  console.log('写入最新数据...');
   try {
     await initTables();
     const fullData = { ...data, releaseDate: new Date().toISOString() };
     const client = await getClient();
     try {
-      await client.query('INSERT INTO latest_data (data) VALUES ($1)', [fullData]);
+      await client.query('INSERT INTO latest_data (data) VALUES ($1)', [JSON.stringify(fullData)]);
+      console.log('最新数据写入成功');
       return fullData;
     } finally {
       await client.end();
