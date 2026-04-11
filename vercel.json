@@ -3,6 +3,11 @@
   "buildCommand": "npm run vercel-build",
   "installCommand": "npm install && cd client && npm install",
   "outputDirectory": "client/dist",
+  "functions": {
+    "api/*.ts": {
+      "runtime": "@vercel/node@3.0.0"
+    }
+  },
   "headers": [
     {
       "source": "/api/(.*)",
@@ -45,8 +50,24 @@
   ],
   "rewrites": [
     {
-      "source": "/api/(.*)",
-      "destination": "/api/$1"
+      "source": "/api/latest.json",
+      "destination": "/api/latest.json.ts"
+    },
+    {
+      "source": "/api/update",
+      "destination": "/api/update.ts"
+    },
+    {
+      "source": "/api/verify-key",
+      "destination": "/api/verify-key.ts"
+    },
+    {
+      "source": "/api/generate-key",
+      "destination": "/api/generate-key.ts"
+    },
+    {
+      "source": "/api/health",
+      "destination": "/api/health.ts"
     },
     {
       "source": "/(.*)",

@@ -27,7 +27,8 @@
     "cors": "^2.8.5",
     "helmet": "^7.1.0",
     "express-rate-limit": "^7.1.5",
-    "bcryptjs": "^2.4.3"
+    "bcryptjs": "^2.4.3",
+    "@vercel/node": "^3.0.0"
   },
   "engines": {
     "node": ">=20.x"
