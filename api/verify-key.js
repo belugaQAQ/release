@@ -1,7 +1,6 @@
-import { VercelRequest, VercelResponse } from '@vercel/node';
-import { readKeyRegistry, writeKeyRegistry } from './_shared';
+import { readKeyRegistry, writeKeyRegistry } from './_shared.js';
 
-export default async function handler(req: VercelRequest, res: VercelResponse) {
+export default async function handler(req, res) {
   if (req.method === 'GET') {
     try {
       const registry = await readKeyRegistry();

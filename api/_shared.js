@@ -18,7 +18,7 @@ export function generateKeyPair() {
   };
 }
 
-export function encrypt(plaintext: string, keyPair: { masterKey: Buffer; iv: Buffer }) {
+export function encrypt(plaintext, keyPair) {
   const cipher = crypto.createCipheriv('aes-256-gcm', keyPair.masterKey, keyPair.iv);
   let encrypted = cipher.update(plaintext, 'utf8', 'base64');
   encrypted += cipher.final('base64');
@@ -36,30 +36,12 @@ export function generateSeed() {
   return crypto.randomBytes(32).toString('hex');
 }
 
-export interface KeyRecord {
-  keyId: string;
-  keyHash: string;
-  createdAt: string;
-  expiresAt: string | null;
-  usageCount: number;
-  status: string;
-}
-
-export interface KeyRegistry {
-  keys: KeyRecord[];
-  metadata: {
-    totalKeys: number;
-    lastRotated: string;
-    totalResets: number;
-  };
-}
-
-export async function readKeyRegistry(): Promise<KeyRegistry> {
+export async function readKeyRegistry() {
   try {
     const filePath = path.join(DATA_DIR, 'keys', 'key_registry.json');
     const content = await fs.readFile(filePath, 'utf-8');
     return JSON.parse(content);
-  } catch (error: any) {
+  } catch (error) {
     if (error.code === 'ENOENT') {
       return { keys: [], metadata: { totalKeys: 0, lastRotated: '', totalResets: 0 } };
     }
@@ -67,7 +49,7 @@ export async function readKeyRegistry(): Promise<KeyRegistry> {
   }
 }
 
-export async function writeKeyRegistry(registry: KeyRegistry) {
+export async function writeKeyRegistry(registry) {
   await ensureDataDir();
   const filePath = path.join(DATA_DIR, 'keys', 'key_registry.json');
   await fs.writeFile(filePath, JSON.stringify(registry, null, 2), 'utf-8');
@@ -75,32 +57,23 @@ export async function writeKeyRegistry(registry: KeyRegistry) {
 
 const LATEST_FILE = path.join(DATA_DIR, 'latest.json');
 
-export interface LatestData {
-  version: string;
-  url: string;
-  size: number;
-  changelog: string;
-  sha256: string;
-  releaseDate?: string;
-}
-
-export async function readLatestData(): Promise<LatestData | null> {
+export async function readLatestData() {
   try {
     const content = await fs.readFile(LATEST_FILE, 'utf-8');
     return JSON.parse(content);
-  } catch (error: any) {
+  } catch (error) {
     if (error.code === 'ENOENT') return null;
     throw error;
   }
 }
 
-export async function writeLatestData(data: Omit<LatestData, 'releaseDate'>): Promise<LatestData> {
+export async function writeLatestData(data) {
   await ensureDataDir();
-  const fullData: LatestData = { ...data, releaseDate: new Date().toISOString() };
+  const fullData = { ...data, releaseDate: new Date().toISOString() };
   await fs.writeFile(LATEST_FILE, JSON.stringify(fullData, null, 2), 'utf-8');
   return fullData;
 }
 
-export async function hashKey(masterKeyBase64: string): Promise<string> {
+export async function hashKey(masterKeyBase64) {
   return bcrypt.hash(masterKeyBase64, 12);
 }
