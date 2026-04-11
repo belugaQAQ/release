@@ -48,7 +48,7 @@
     "api/**/*.{ts,js}": {
       "maxDuration": 30,
       "memory": 1024,
-      "runtime": "nodejs18.x"
+      "runtime": "@vercel/node@3"
     }
   },
   "crons": [
