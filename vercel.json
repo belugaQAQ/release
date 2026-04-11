@@ -3,11 +3,6 @@
   "buildCommand": "npm run vercel-build",
   "installCommand": "npm install && cd client && npm install",
   "outputDirectory": "client/dist",
-  "functions": {
-    "api/*.ts": {
-      "runtime": "@vercel/node@3.0.0"
-    }
-  },
   "headers": [
     {
       "source": "/api/(.*)",
