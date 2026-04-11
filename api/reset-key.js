@@ -9,20 +9,27 @@ export default async function handler(req, res) {
     const registry = await readKeyRegistry();
     
     const activeKeys = registry.keys.filter(k => k.status === 'active');
-    if (activeKeys.length > 0) {
-      return res.status(403).json({ 
+    if (activeKeys.length === 0) {
+      return res.status(400).json({ 
         success: false, 
-        error: 'KEY_EXISTS', 
-        message: '已经存在有效的密钥，请先重置密钥后再生成新密钥' 
+        error: 'NO_ACTIVE_KEY', 
+        message: '没有需要重置的活跃密钥' 
       });
     }
+
+    activeKeys.forEach(key => {
+      key.status = 'revoked';
+    });
+    
+    registry.metadata.lastRotated = new Date().toISOString();
+    registry.metadata.totalResets += 1;
 
     const keyPair = generateKeyPair();
     const keyId = generateKeyId();
     const seed = generateSeed();
     const encryptedData = encrypt(seed, keyPair);
 
-    const keyFile = {
+    const newKeyFile = {
       meta: {
         version: '1.0',
         keyId,
@@ -58,16 +65,19 @@ export default async function handler(req, res) {
 
     return res.status(200).json({
       success: true,
-      message: '密钥生成成功',
-      data: keyFile,
+      message: '密钥重置成功，新密钥已生成',
+      revokedKeys: activeKeys.map(k => k.keyId),
+      data: {
+        newKeyFile
+      }
     });
 
   } catch (error) {
-    console.error('密钥生成失败:', error);
+    console.error('密钥重置失败:', error);
     return res.status(500).json({
       success: false,
       error: 'INTERNAL_ERROR',
-      message: '密钥生成过程中发生错误',
+      message: '密钥重置过程中发生错误',
     });
   }
 }

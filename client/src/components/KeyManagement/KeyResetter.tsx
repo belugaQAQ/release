@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { resetKey } from '../../utils/api';
 
 interface KeyResetterProps {
   currentKey: any;
@@ -22,20 +23,11 @@ export function KeyResetter({ currentKey, onResetComplete }: KeyResetterProps) {
     setLoading(true);
 
     try {
-      const response = await fetch('/api/reset-key', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${JSON.stringify(currentKey)}`,
-        },
-        body: JSON.stringify({ reason: resetReason, force: false }),
-      });
+      const response = await resetKey(resetReason);
 
-      const data = await response.json();
-
-      if (data.success) {
+      if (response.success && response.data?.newKeyFile) {
         const newKeyBlob = new Blob(
-          [JSON.stringify(data.data.newKeyFile, null, 2)],
+          [JSON.stringify(response.data.newKeyFile, null, 2)],
           { type: 'application/json' }
         );
         const url = URL.createObjectURL(newKeyBlob);
@@ -45,10 +37,12 @@ export function KeyResetter({ currentKey, onResetComplete }: KeyResetterProps) {
         link.click();
         URL.revokeObjectURL(url);
 
-        onResetComplete(data.data.newKeyFile);
+        localStorage.setItem('keyFile', JSON.stringify(response.data.newKeyFile));
+        onResetComplete(response.data.newKeyFile);
         setShowConfirmDialog(false);
+        setResetReason('');
       } else {
-        alert(data.message || '重置失败');
+        alert(response.message || '重置失败');
       }
     } catch (error: any) {
       alert(error.message || '网络错误，请重试');
