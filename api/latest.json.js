@@ -14,34 +14,38 @@ export default async function handler(req, res) {
     res.setHeader('Expires', '0');
     res.setHeader('Surrogate-Control', 'no-store');
     
+    let response;
     if (!data) {
-      return res.status(200).json({
+      response = {
         version: "0.0.0.0",
         url: "",
         size: 0,
         changelog: "",
         sha256: "",
         releaseDate: new Date().toISOString()
-      });
+      };
+    } else {
+      response = {
+        version: data.version,
+        url: data.url,
+        size: data.size,
+        changelog: data.changelog,
+        sha256: data.sha256,
+        releaseDate: data.releaseDate
+      };
     }
     
-    return res.status(200).json({
-      version: data.version,
-      url: data.url,
-      size: data.size,
-      changelog: data.changelog,
-      sha256: data.sha256,
-      releaseDate: data.releaseDate
-    });
+    return res.status(200).send(JSON.stringify(response, null, 2) + '\n');
   } catch (error) {
     console.error('读取数据失败:', error);
-    return res.status(500).json({
+    const response = {
       version: "0.0.0.0",
       url: "",
       size: 0,
       changelog: "",
       sha256: "",
       releaseDate: new Date().toISOString()
-    });
+    };
+    return res.status(500).send(JSON.stringify(response, null, 2) + '\n');
   }
 }
