@@ -42,11 +42,11 @@ function formatDate(dateStr: string): string {
 
 function getGreetingTime(): string {
   const hour = new Date().getHours();
-  if (hour < 6) return '夜深了';
-  if (hour < 12) return '早上好';
-  if (hour < 14) return '中午好';
-  if (hour < 18) return '下午好';
-  return '晚上好';
+  if (hour < 6) return '早点睡喵~ ';
+  if (hour < 12) return '早上好喵~ ';
+  if (hour < 14) return '中午好喵~ ';
+  if (hour < 18) return '下午好喵~ ';
+  return '晚上好喵~ ';
 }
 
 function getDateString(): string {
@@ -59,7 +59,7 @@ function getDateString(): string {
 }
 
 function markdownToHtml(markdown: string): string {
-  if (!markdown) return '<p>暂无更新日志</p>';
+  if (!markdown) return '<p>暂无更新日志喵~</p>';
   
   let html = markdown
     .replace(/```(\w+)?\n([\s\S]*?)```/g, '<pre><code>$2</code></pre>')
@@ -103,7 +103,7 @@ export function HomePage() {
       
       setChangelog(changelogContent);
     } catch (error) {
-      console.error('加载数据失败:', error);
+      console.error('加载数据失败了喵:', error);
     } finally {
       setLoading(false);
     }
@@ -130,7 +130,7 @@ export function HomePage() {
         <div className="greeting-card">
           <div className="greeting-text">
             <mdui-icon name="waving_hand" style={{ fontSize: '28px' }}></mdui-icon>
-            {getGreetingTime()}，管理员
+            {getGreetingTime()}开发者！
           </div>
           <div className="greeting-subtext">今天是 {getDateString()}</div>
         </div>
@@ -179,7 +179,7 @@ export function HomePage() {
             <div className="data-section changelog-section">
               <div className="data-section-header">
                 <span className="data-section-title">
-                  <mdui-icon name="file_text" style={{ color: 'var(--md-sys-color-primary)' }}></mdui-icon>
+                  <mdui-icon name="text_snippet" style={{ color: 'var(--md-sys-color-primary)' }}></mdui-icon>
                   更新日志 (Changelog)
                 </span>
               </div>
@@ -209,7 +209,7 @@ export function HomePage() {
               </span>
             </div>
             <p style={{ color: 'var(--md-sys-color-on-surface-variant)', textAlign: 'center', padding: '24px' }}>
-              暂无数据，请先编辑更新信息
+              暂无数据喵~，请先编辑更新信息
             </p>
             <div className="action-area">
               <mdui-button variant="filled" fullWidth onClick={handleEdit}>

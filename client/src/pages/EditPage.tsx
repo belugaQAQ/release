@@ -26,6 +26,7 @@ export function EditPage() {
   const { values, errors, isFormValid, updateField, resetForm } = useFormValidation();
   const { isAuthenticated, keyData, logout } = useKeyAuth();
   const [changelogContent, setChangelogContent] = useState('');
+  const [showChangelogPreview, setShowChangelogPreview] = useState(false);
   const [submittingVersion, setSubmittingVersion] = useState(false);
   const [submittingChangelog, setSubmittingChangelog] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
@@ -57,7 +58,7 @@ export function EditPage() {
       
       setChangelogContent(changelogText);
     } catch (error) {
-      console.error('加载数据失败:', error);
+      console.error('加载数据失败了喵:', error); 
     } finally {
       setLoading(false);
     }
@@ -88,9 +89,9 @@ export function EditPage() {
         setSubmitSuccess(true);
         setTimeout(() => setSubmitSuccess(false), 3000);
       }
-    } catch (error: any) {
-      console.error('提交失败:', error);
-      alert(error.message || '提交失败，请重试');
+      } catch (error: any) {
+      console.error('提交失败了喵:', error); 
+      alert(error.message || '提交失败喵~，请重试');
     } finally {
       setSubmittingVersion(false);
     }
@@ -111,8 +112,8 @@ export function EditPage() {
         setTimeout(() => setChangelogSuccess(false), 3000);
       }
     } catch (error: any) {
-      console.error('更新日志提交失败:', error);
-      alert(error.message || '提交失败，请重试');
+      console.error('更新日志提交失败了喵:', error); 
+      alert(error.message || '提交失败喵~，请重试');
     } finally {
       setSubmittingChangelog(false);
     }
@@ -149,6 +150,9 @@ export function EditPage() {
 
         <form onSubmit={handleSubmitVersion}>
           <div className="form-fields">
+            <div className="form-section-divider">
+              <span>版本数据</span>
+            </div>
             <VersionField
               value={values.version}
               onChange={(v) => updateField('version', v)}
@@ -200,7 +204,9 @@ export function EditPage() {
             </div>
           </div>
         </form>
-
+        <br />
+        <br />
+        <br />
         <div className="form-fields">
           <div className="form-section-divider">
             <span>更新日志 Markdown</span>
@@ -209,6 +215,7 @@ export function EditPage() {
           <MarkdownField
             value={changelogContent}
             onChange={setChangelogContent}
+            showPreview={showChangelogPreview}
           />
 
           <div className="action-area">
@@ -221,6 +228,14 @@ export function EditPage() {
             >
               <mdui-icon name="save" slot="icon"></mdui-icon>
               保存更新日志
+            </mdui-button>
+            <mdui-button
+              variant="outlined"
+              fullWidth
+              onClick={() => setShowChangelogPreview(!showChangelogPreview)}
+            >
+              <mdui-icon name={showChangelogPreview ? 'edit_note' : 'preview'} slot="icon"></mdui-icon>
+              {showChangelogPreview ? '隐藏预览' : '预览'}
             </mdui-button>
           </div>
         </div>

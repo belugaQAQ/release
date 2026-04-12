@@ -30,8 +30,8 @@ export function KeyDownloader({ keyFileData, onDownloadComplete }: KeyDownloader
       }, 1500);
 
     } catch (error) {
-      console.error('下载失败:', error);
-      alert('下载失败，请重试');
+      console.error('下载失败了喵:', error); 
+      alert('下载失败喵~，请重试');
     } finally {
       setDownloading(false);
     }

@@ -42,10 +42,10 @@ export function KeyResetter({ currentKey, onResetComplete }: KeyResetterProps) {
         setShowConfirmDialog(false);
         setResetReason('');
       } else {
-        alert(response.message || '重置失败');
+        alert(response.message || '重置失败喵~，请重试');
       }
     } catch (error: any) {
-      alert(error.message || '网络错误，请重试');
+      alert(error.message || '网络错误喵~，请重试');
     } finally {
       setLoading(false);
     }

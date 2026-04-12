@@ -7,9 +7,6 @@ export default async function handler(req, res) {
 
   try {
     const data = await readLatestData();
-    if (!data) {
-      return res.status(404).json({ success: false, error: 'NOT_FOUND', message: '暂无更新数据' });
-    }
     
     res.setHeader('Content-Type', 'application/json; charset=utf-8');
     res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
@@ -17,9 +14,34 @@ export default async function handler(req, res) {
     res.setHeader('Expires', '0');
     res.setHeader('Surrogate-Control', 'no-store');
     
-    return res.status(200).json(data);
+    if (!data) {
+      return res.status(200).json({
+        version: "0.0.0.0",
+        url: "",
+        size: 0,
+        changelog: "",
+        sha256: "",
+        releaseDate: new Date().toISOString()
+      });
+    }
+    
+    return res.status(200).json({
+      version: data.version,
+      url: data.url,
+      size: data.size,
+      changelog: data.changelog,
+      sha256: data.sha256,
+      releaseDate: data.releaseDate
+    });
   } catch (error) {
     console.error('读取数据失败:', error);
-    return res.status(500).json({ success: false, error: 'INTERNAL_ERROR', message: '读取数据过程中发生错误' });
+    return res.status(500).json({
+      version: "0.0.0.0",
+      url: "",
+      size: 0,
+      changelog: "",
+      sha256: "",
+      releaseDate: new Date().toISOString()
+    });
   }
 }

@@ -52,11 +52,11 @@ export function KeyAuthProvider({ children }: { children: React.ReactNode }) {
         return false;
       }
     } catch (error: any) {
-      console.error('验证过程出错:', error);
+      console.error('验证过程出错了喵:', error); 
       setState((prev) => ({
         ...prev,
         isLoading: false,
-        error: error.message || '验证过程出错',
+        error: error.message || '验证过程出错了喵',
       }));
       return false;
     }

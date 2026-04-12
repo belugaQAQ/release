@@ -30,7 +30,7 @@ export function KeyImporter({ onImportSuccess }: KeyImporterProps) {
 
         onImportSuccess(keyData);
       } catch (error: any) {
-        setErrorMessage(error.message || '文件解析失败');
+        setErrorMessage(error.message || '文件解析失败喵~，请重试');
       } finally {
         setLoading(false);
       }

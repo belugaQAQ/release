@@ -44,7 +44,7 @@ export function AuthenticationPage() {
         setShowDownloader(true);
       }
     } catch (error) {
-      console.error('生成密钥失败:', error);
+      console.error('生成密钥失败了喵:', error);
     } finally {
       setGenerating(false);
     }
