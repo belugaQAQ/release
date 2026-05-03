@@ -206,7 +206,7 @@ export function HomePage() {
 
             <div className="data-item">
               <span className="data-label">下载链接 (URL)</span>
-            <span className="data-value data-value--url">{BetaData.url}</span>
+            <span className="data-value data-value--url">{betaData.url}</span>
             </div>
 
             <div className="data-item">
