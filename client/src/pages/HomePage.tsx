@@ -85,6 +85,7 @@ export function HomePage() {
   const [betaData, setBetaData] = useState<LatestData | null>(null);
   const [betaChangelog, setBetaChangelog] = useState<string>('');
   const [loading, setLoading] = useState(true);
+  const [viewMode, setViewMode] = useState<'latest' | 'beta'>('latest');
 
   useEffect(() => {
     loadData();
@@ -128,12 +129,177 @@ export function HomePage() {
     navigate('/edit');
   };
 
+  const renderLatestView = () => {
+    if (!latestData) return null;
+    return (
+      <>
+        <div className="data-section">
+          <div className="data-section-header">
+            <span className="data-section-title">
+              <mdui-icon name="info" style={{ color: 'var(--md-sys-color-primary)' }}></mdui-icon>
+              当前版本信息
+            </span>
+            <span className="version-chip">v{latestData.version}</span>
+          </div>
+
+          <div className="data-item">
+            <span className="data-label">版本号 (Version)</span>
+            <span className="data-value">{latestData.version}</span>
+          </div>
+
+          <div className="data-item">
+            <span className="data-label">下载链接 (URL)</span>
+            <span className="data-value data-value--url">{latestData.url}</span>
+          </div>
+
+          <div className="data-item">
+            <span className="data-label">文件大小 (Size)</span>
+            <span className="data-value">
+              {formatFileSize(latestData.size)} ({latestData.size.toLocaleString()} 字节)
+            </span>
+          </div>
+
+          <div className="data-item">
+            <span className="data-label">SHA256 校验值</span>
+            <span className="data-value data-value--code">{latestData.sha256}</span>
+          </div>
+
+          <div className="data-item">
+            <span className="data-label">发布时间 (Release Date)</span>
+            <span className="data-value">{formatDate(latestData.releaseDate)}</span>
+          </div>
+        </div>
+
+        <div className="data-section changelog-section">
+          <div className="data-section-header">
+            <span className="data-section-title">
+              <mdui-icon name="text_snippet" style={{ color: 'var(--md-sys-color-primary)' }}></mdui-icon>
+              更新日志 (Changelog)
+            </span>
+          </div>
+          <div 
+            className="changelog-content"
+            dangerouslySetInnerHTML={{ __html: markdownToHtml(changelog) }}
+          />
+        </div>
+      </>
+    );
+  };
+
+  const renderBetaView = () => {
+    if (!betaData) return null;
+    return (
+      <>
+        <div className="data-section beta-section" style={{ border: '2px solid #ff9500' }}>
+          <div className="data-section-header">
+            <span className="data-section-title" style={{ color: '#ff9500' }}>
+              <mdui-icon name="warning_amber" style={{ color: '#ff9500' }}></mdui-icon>
+              测试版本 (Beta)
+            </span>
+            <span className="beta-badge">BETA</span>
+          </div>
+          <div className="data-grid">
+            <div className="data-item">
+              <span className="data-label">版本号</span>
+              <span className="data-value data-value--version">{betaData.version}</span>
+            </div>
+
+            <div className="data-item">
+              <span className="data-label">下载链接</span>
+              <span className="data-value">
+                <mdui-button
+                  variant="text"
+                  href={betaData.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ padding: 0, minWidth: 0 }}
+                >
+                  <mdui-icon name="open_in_new" slot="icon"></mdui-icon>
+                  打开链接
+                </mdui-button>
+              </span>
+            </div>
+
+            <div className="data-item">
+              <span className="data-label">文件大小</span>
+              <span className="data-value">{formatFileSize(betaData.size)}</span>
+            </div>
+
+            <div className="data-item">
+              <span className="data-label">SHA256 校验值</span>
+              <span className="data-value data-value--code">{betaData.sha256}</span>
+            </div>
+
+            <div className="data-item">
+              <span className="data-label">发布时间 (Release Date)</span>
+              <span className="data-value">{formatDate(betaData.releaseDate)}</span>
+            </div>
+          </div>
+        </div>
+
+        {betaChangelog && (
+          <div className="data-section beta-changelog-section" style={{ border: '2px solid #ff9500' }}>
+            <div className="data-section-header">
+              <span className="data-section-title" style={{ color: '#ff9500' }}>
+                <mdui-icon name="text_snippet" style={{ color: '#ff9500' }}></mdui-icon>
+                测试版本更新日志 (Beta Changelog)
+              </span>
+            </div>
+            <div 
+              className="changelog-content"
+              dangerouslySetInnerHTML={{ __html: markdownToHtml(betaChangelog) }}
+            />
+          </div>
+        )}
+      </>
+    );
+  };
+
+  const renderEmptyView = () => (
+    <div className="data-section">
+      <div className="data-section-header">
+        <span className="data-section-title">
+          <mdui-icon name="info" style={{ color: 'var(--md-sys-color-primary)' }}></mdui-icon>
+          当前版本信息
+        </span>
+      </div>
+      <p style={{ color: 'var(--md-sys-color-on-surface-variant)', textAlign: 'center', padding: '24px' }}>
+        暂无数据喵~，请先编辑更新信息
+      </p>
+      <div className="action-area">
+        <mdui-button variant="filled" fullWidth onClick={handleEdit}>
+          <mdui-icon name="edit" slot="icon"></mdui-icon>
+          编辑更新信息
+        </mdui-button>
+      </div>
+    </div>
+  );
+
   return (
     <div className="page-with-nav">
       <AppBar
         title="首页"
         actions={
-          <mdui-button-icon icon="logout" onClick={handleLogout}></mdui-button-icon>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+            <div className="mode-switch" style={{ display: 'flex', gap: '8px', marginRight: '16px' }}>
+              <mdui-button 
+                variant={viewMode === 'latest' ? 'filled' : 'outlined'} 
+                size="small"
+                onClick={() => setViewMode('latest')}
+              >
+                正式版本
+              </mdui-button>
+              <mdui-button 
+                variant={viewMode === 'beta' ? 'filled' : 'outlined'} 
+                size="small"
+                onClick={() => setViewMode('beta')}
+                disabled={!betaData}
+              >
+                测试版本
+              </mdui-button>
+            </div>
+            <mdui-button-icon icon="logout" onClick={handleLogout}></mdui-button-icon>
+          </div>
         }
       />
 
@@ -148,129 +314,10 @@ export function HomePage() {
 
         {loading ? (
           <LoadingSpinner message="正在加载数据..." />
-        ) : latestData ? (
+        ) : viewMode === 'latest' ? (
           <>
-            <div className="data-section">
-              <div className="data-section-header">
-                <span className="data-section-title">
-                  <mdui-icon name="info" style={{ color: 'var(--md-sys-color-primary)' }}></mdui-icon>
-                  当前版本信息
-                </span>
-                <span className="version-chip">v{latestData.version}</span>
-              </div>
-
-              <div className="data-item">
-                <span className="data-label">版本号 (Version)</span>
-                <span className="data-value">{latestData.version}</span>
-              </div>
-
-              <div className="data-item">
-                <span className="data-label">下载链接 (URL)</span>
-                <span className="data-value data-value--url">{latestData.url}</span>
-              </div>
-
-              <div className="data-item">
-                <span className="data-label">文件大小 (Size)</span>
-                <span className="data-value">
-                  {formatFileSize(latestData.size)} ({latestData.size.toLocaleString()} 字节)
-                </span>
-              </div>
-
-              <div className="data-item">
-                <span className="data-label">SHA256 校验值</span>
-                <span className="data-value data-value--code">{latestData.sha256}</span>
-              </div>
-
-              <div className="data-item">
-                <span className="data-label">发布时间 (Release Date)</span>
-                <span className="data-value">{formatDate(latestData.releaseDate)}</span>
-              </div>
-            </div>
-
-            <div className="data-section changelog-section">
-              <div className="data-section-header">
-                <span className="data-section-title">
-                  <mdui-icon name="text_snippet" style={{ color: 'var(--md-sys-color-primary)' }}></mdui-icon>
-                  更新日志 (Changelog)
-                </span>
-              </div>
-              <div 
-                className="changelog-content"
-                dangerouslySetInnerHTML={{ __html: markdownToHtml(changelog) }}
-              />
-            </div>
-
-            {betaData && (
-              <>
-                <div className="data-section beta-section" style={{ border: '2px solid #ff9500' }}>
-                  <div className="data-section-header">
-                    <span className="data-section-title" style={{ color: '#ff9500' }}>
-                      <mdui-icon name="warning_amber" style={{ color: '#ff9500' }}></mdui-icon>
-                      测试版本 (Beta)
-                    </span>
-                    <span className="beta-badge">BETA</span>
-                  </div>
-                  <div className="data-grid">
-                    <div className="data-item">
-                      <span className="data-label">版本号</span>
-                      <span className="data-value data-value--version">{betaData.version}</span>
-                    </div>
-
-                    <div className="data-item">
-                      <span className="data-label">下载链接</span>
-                      <span className="data-value">
-                        <mdui-button
-                          variant="text"
-                          href={betaData.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          style={{ padding: 0, minWidth: 0 }}
-                        >
-                          <mdui-icon name="open_in_new" slot="icon"></mdui-icon>
-                          打开链接
-                        </mdui-button>
-                      </span>
-                    </div>
-
-                    <div className="data-item">
-                      <span className="data-label">文件大小</span>
-                      <span className="data-value">{formatFileSize(betaData.size)}</span>
-                    </div>
-
-                    <div className="data-item">
-                      <span className="data-label">SHA256 校验值</span>
-                      <span className="data-value data-value--code">{betaData.sha256}</span>
-                    </div>
-
-                    <div className="data-item">
-                      <span className="data-label">发布时间 (Release Date)</span>
-                      <span className="data-value">{formatDate(betaData.releaseDate)}</span>
-                    </div>
-                  </div>
-                </div>
-
-                {betaChangelog && (
-                  <div className="data-section beta-changelog-section" style={{ border: '2px solid #ff9500' }}>
-                    <div className="data-section-header">
-                      <span className="data-section-title" style={{ color: '#ff9500' }}>
-                        <mdui-icon name="text_snippet" style={{ color: '#ff9500' }}></mdui-icon>
-                        测试版本更新日志 (Beta Changelog)
-                      </span>
-                    </div>
-                    <div 
-                      className="changelog-content"
-                      dangerouslySetInnerHTML={{ __html: markdownToHtml(betaChangelog) }}
-                    />
-                  </div>
-                )}
-              </>
-            )}
-
+            {renderLatestView() || renderEmptyView()}
             <div className="action-area">
-              <mdui-button variant="filled" fullWidth onClick={handleEdit}>
-                <mdui-icon name="edit" slot="icon"></mdui-icon>
-                编辑更新信息
-              </mdui-button>
               <mdui-button variant="outlined" fullWidth onClick={loadData}>
                 <mdui-icon name="refresh" slot="icon"></mdui-icon>
                 刷新数据
@@ -278,23 +325,15 @@ export function HomePage() {
             </div>
           </>
         ) : (
-          <div className="data-section">
-            <div className="data-section-header">
-              <span className="data-section-title">
-                <mdui-icon name="info" style={{ color: 'var(--md-sys-color-primary)' }}></mdui-icon>
-                当前版本信息
-              </span>
-            </div>
-            <p style={{ color: 'var(--md-sys-color-on-surface-variant)', textAlign: 'center', padding: '24px' }}>
-              暂无数据喵~，请先编辑更新信息
-            </p>
+          <>
+            {renderBetaView() || renderEmptyView()}
             <div className="action-area">
-              <mdui-button variant="filled" fullWidth onClick={handleEdit}>
-                <mdui-icon name="edit" slot="icon"></mdui-icon>
-                编辑更新信息
+              <mdui-button variant="outlined" fullWidth onClick={loadData}>
+                <mdui-icon name="refresh" slot="icon"></mdui-icon>
+                刷新数据
               </mdui-button>
             </div>
-          </div>
+          </>
         )}
       </div>
 
