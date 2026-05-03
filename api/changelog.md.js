@@ -1,4 +1,4 @@
-import { readChangelog, writeChangelog } from './_shared.js';
+import { readChangelog, writeChangelog, readBetaChangelog, writeBetaChangelog } from './_shared.js';
 
 export default async function handler(req, res) {
   if (req.method === 'GET') {
@@ -20,7 +20,7 @@ export default async function handler(req, res) {
   if (req.method === 'POST') {
     try {
       const { authorization } = req.headers;
-      const { content } = req.body;
+      const { content, beta } = req.body;
 
       if (!authorization || !authorization.startsWith('Bearer ')) {
         return res.status(401).json({ success: false, error: 'UNAUTHORIZED', message: '缺少认证信息' });
@@ -30,9 +30,11 @@ export default async function handler(req, res) {
         return res.status(400).json({ success: false, error: 'INVALID_REQUEST', message: '请提供有效的更新日志内容' });
       }
 
-      const result = await writeChangelog(content);
+      const writeFn = beta ? writeBetaChangelog : writeChangelog;
+      const result = await writeFn(content);
 
-      return res.status(200).json({ success: true, message: '更新日志更新成功', data: result });
+      const mode = beta ? '测试版本' : '正式版本';
+      return res.status(200).json({ success: true, message: `${mode}更新日志更新成功`, data: result });
 
     } catch (error) {
       console.error('更新日志更新失败:', error);

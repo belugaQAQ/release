@@ -181,5 +181,71 @@ export async function updateChangelog(content: string, keyFile: any): Promise<Ap
   });
 }
 
+export async function getBetaVersion(): Promise<ApiResponse> {
+  return api.get('/api/beta.json');
+}
+
+export async function getBetaChangelog(): Promise<string> {
+  return requestText('/api/betamd.md');
+}
+
+export async function updateBetaData(data: any, keyFile: any): Promise<ApiResponse> {
+  let actualKeyFile = keyFile;
+  
+  if (!actualKeyFile) {
+    const stored = sessionStorage.getItem('auth_key');
+    if (stored) {
+      try {
+        actualKeyFile = JSON.parse(stored);
+      } catch {
+        console.error('Failed to parse stored key file');
+      }
+    }
+  }
+
+  if (!actualKeyFile) {
+    throw new Error('No authentication key available');
+  }
+
+  const headers: Record<string, string> = {
+    'Authorization': `Bearer ${JSON.stringify(actualKeyFile)}`,
+  };
+  
+  return request('/api/update', {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({ data, beta: true }),
+  });
+}
+
+export async function updateBetaChangelog(content: string, keyFile: any): Promise<ApiResponse> {
+  let actualKeyFile = keyFile;
+  
+  if (!actualKeyFile) {
+    const stored = sessionStorage.getItem('auth_key');
+    if (stored) {
+      try {
+        actualKeyFile = JSON.parse(stored);
+      } catch {
+        console.error('Failed to parse stored key file');
+      }
+    }
+  }
+
+  if (!actualKeyFile) {
+    throw new Error('No authentication key available');
+  }
+
+  const headers: Record<string, string> = {
+    'Authorization': `Bearer ${JSON.stringify(actualKeyFile)}`,
+  };
+  
+  return request('/api/changelog.md', {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({ content, beta: true }),
+  });
+}
+
 export { ApiError, ApiResponse };
 export default api;

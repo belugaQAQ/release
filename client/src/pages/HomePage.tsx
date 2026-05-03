@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { AppBar } from '../components/Layout/AppBar';
 import { Navigation } from '../components/Layout/Navigation';
 import { useKeyAuth } from '../hooks/useKeyAuth';
-import { getLatestData, getChangelog } from '../utils/api';
+import { getLatestData, getChangelog, getBetaVersion, getBetaChangelog } from '../utils/api';
 import { LoadingSpinner } from '../components/UI/LoadingSpinner';
 
 interface LatestData {
@@ -82,6 +82,8 @@ export function HomePage() {
   const navigate = useNavigate();
   const [latestData, setLatestData] = useState<LatestData | null>(null);
   const [changelog, setChangelog] = useState<string>('');
+  const [betaData, setBetaData] = useState<LatestData | null>(null);
+  const [betaChangelog, setBetaChangelog] = useState<string>('');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -91,9 +93,11 @@ export function HomePage() {
   const loadData = async () => {
     setLoading(true);
     try {
-      const [latestResponse, changelogContent] = await Promise.all([
+      const [latestResponse, changelogContent, betaResponse, betaChangelogContent] = await Promise.all([
         getLatestData(),
         getChangelog(),
+        getBetaVersion(),
+        getBetaChangelog(),
       ]);
       
       const data = (latestResponse as any).data || latestResponse;
@@ -102,6 +106,13 @@ export function HomePage() {
       }
       
       setChangelog(changelogContent);
+
+      const betaDataVal = (betaResponse as any).data || betaResponse;
+      if (betaDataVal && betaDataVal.version && !betaDataVal.version.includes('0.0.0.0')) {
+        setBetaData(betaDataVal as LatestData);
+      }
+
+      setBetaChangelog(betaChangelogContent);
     } catch (error) {
       console.error('加载数据失败了喵:', error);
     } finally {
@@ -188,6 +199,72 @@ export function HomePage() {
                 dangerouslySetInnerHTML={{ __html: markdownToHtml(changelog) }}
               />
             </div>
+
+            {betaData && (
+              <>
+                <div className="data-section beta-section" style={{ border: '2px solid #ff9500' }}>
+                  <div className="data-section-header">
+                    <span className="data-section-title" style={{ color: '#ff9500' }}>
+                      <mdui-icon name="warning_amber" style={{ color: '#ff9500' }}></mdui-icon>
+                      测试版本 (Beta)
+                    </span>
+                    <span className="beta-badge">BETA</span>
+                  </div>
+                  <div className="data-grid">
+                    <div className="data-item">
+                      <span className="data-label">版本号</span>
+                      <span className="data-value data-value--version">{betaData.version}</span>
+                    </div>
+
+                    <div className="data-item">
+                      <span className="data-label">下载链接</span>
+                      <span className="data-value">
+                        <mdui-button
+                          variant="text"
+                          href={betaData.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          style={{ padding: 0, minWidth: 0 }}
+                        >
+                          <mdui-icon name="open_in_new" slot="icon"></mdui-icon>
+                          打开链接
+                        </mdui-button>
+                      </span>
+                    </div>
+
+                    <div className="data-item">
+                      <span className="data-label">文件大小</span>
+                      <span className="data-value">{formatFileSize(betaData.size)}</span>
+                    </div>
+
+                    <div className="data-item">
+                      <span className="data-label">SHA256 校验值</span>
+                      <span className="data-value data-value--code">{betaData.sha256}</span>
+                    </div>
+
+                    <div className="data-item">
+                      <span className="data-label">发布时间 (Release Date)</span>
+                      <span className="data-value">{formatDate(betaData.releaseDate)}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {betaChangelog && (
+                  <div className="data-section beta-changelog-section" style={{ border: '2px solid #ff9500' }}>
+                    <div className="data-section-header">
+                      <span className="data-section-title" style={{ color: '#ff9500' }}>
+                        <mdui-icon name="text_snippet" style={{ color: '#ff9500' }}></mdui-icon>
+                        测试版本更新日志 (Beta Changelog)
+                      </span>
+                    </div>
+                    <div 
+                      className="changelog-content"
+                      dangerouslySetInnerHTML={{ __html: markdownToHtml(betaChangelog) }}
+                    />
+                  </div>
+                )}
+              </>
+            )}
 
             <div className="action-area">
               <mdui-button variant="filled" fullWidth onClick={handleEdit}>

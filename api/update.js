@@ -1,4 +1,4 @@
-import { writeLatestData } from './_shared.js';
+import { writeLatestData, writeBetaData } from './_shared.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -7,12 +7,13 @@ export default async function handler(req, res) {
 
   try {
     const { authorization } = req.headers;
-    const { data } = req.body;
+    const { data, beta } = req.body;
 
     console.log('=== Update Request Debug ===');
     console.log('Headers:', { authorization: !!authorization });
     console.log('Body:', req.body);
     console.log('Data:', data);
+    console.log('Beta:', beta);
     console.log('Data Type:', typeof data);
     console.log('============================');
 
@@ -30,7 +31,8 @@ export default async function handler(req, res) {
       return res.status(400).json({ success: false, error: 'INVALID_REQUEST', message: `缺少必要字段: ${missingFields.join(', ')}` });
     }
 
-    const result = await writeLatestData({
+    const writeFn = beta ? writeBetaData : writeLatestData;
+    const result = await writeFn({
       version: String(data.version),
       url: String(data.url),
       size: Number(data.size),
@@ -38,7 +40,8 @@ export default async function handler(req, res) {
       sha256: String(data.sha256),
     });
 
-    return res.status(200).json({ success: true, message: '数据更新成功', data: result });
+    const mode = beta ? '测试版本' : '正式版本';
+    return res.status(200).json({ success: true, message: `${mode}数据更新成功`, data: result });
 
   } catch (error) {
     console.error('数据更新失败:', error);

@@ -1,0 +1,6 @@
+- [x] 访问 `/api/beta.json` 返回与 `/api/latest.json` 格式一致的 JSON 数据
+- [x] 访问 `/api/betamd.md` 返回 Markdown 格式的测试版本更新日志
+- [x] 更新测试版本数据后，`/api/beta.json` 能正确返回更新后的内容
+- [x] `/api/beta.json` 和 `/api/latest.json` 数据完全独立，互不影响
+- [x] 前端能正确显示测试版本信息
+- [x] 前端能正确编辑测试版本数据
