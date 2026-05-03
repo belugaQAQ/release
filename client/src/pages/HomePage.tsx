@@ -205,19 +205,8 @@ export function HomePage() {
             </div>
 
             <div className="data-item">
-              <span className="data-label">下载链接</span>
-              <span className="data-value">
-                <mdui-button
-                  variant="text"
-                  href={betaData.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{ padding: 0, minWidth: 0 }}
-                >
-                  <mdui-icon name="open_in_new" slot="icon"></mdui-icon>
-                  打开链接
-                </mdui-button>
-              </span>
+              <span className="data-label">下载链接 (URL)</span>
+            <span className="data-value data-value--url">{BetaData.url}</span>
             </div>
 
             <div className="data-item">
