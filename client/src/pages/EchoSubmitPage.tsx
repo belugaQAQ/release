@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { AppBar } from '../components/Layout/AppBar';
 import { submitEcho } from '../utils/api';
 
 export function EchoSubmitPage() {
@@ -40,7 +41,8 @@ export function EchoSubmitPage() {
   };
 
   return (
-    <div className="page-without-nav" style={{ minHeight: '100vh', paddingBottom: '24px' }}>
+    <div className="page-with-nav">
+      <AppBar title="投稿回声洞" />
       <div className="page-content" style={{ maxWidth: '600px', margin: '0 auto', padding: '0 16px' }}>
         <div className="greeting-card">
           <div className="greeting-text">

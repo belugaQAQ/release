@@ -30,8 +30,8 @@ export function EchoAdminPage() {
     setLoading(true);
     try {
       const response = await getPendingEchoes(keyData);
-      if (response.success && response.data?.echoes) {
-        setPendingEchoes(response.data.echoes);
+      if (response.success && (response as any).echoes) {
+        setPendingEchoes((response as any).echoes);
       }
     } catch (error) {
       console.error('加载待审批回声洞失败:', error);
