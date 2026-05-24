@@ -1,11 +1,7 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { AppBar } from '../components/Layout/AppBar';
-import { Navigation } from '../components/Layout/Navigation';
 import { submitEcho } from '../utils/api';
 
 export function EchoSubmitPage() {
-  const navigate = useNavigate();
   const [text, setText] = useState('');
   const [user, setUser] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -44,10 +40,8 @@ export function EchoSubmitPage() {
   };
 
   return (
-    <div className="page-with-nav">
-      <AppBar title="投稿回声洞" />
-
-      <div className="page-content">
+    <div className="page-without-nav" style={{ minHeight: '100vh', paddingBottom: '24px' }}>
+      <div className="page-content" style={{ maxWidth: '600px', margin: '0 auto', padding: '0 16px' }}>
         <div className="greeting-card">
           <div className="greeting-text">
             <mdui-icon name="forum" style={{ fontSize: '28px' }}></mdui-icon>
@@ -115,8 +109,6 @@ export function EchoSubmitPage() {
           </div>
         </form>
       </div>
-
-      <Navigation />
     </div>
   );
 }
