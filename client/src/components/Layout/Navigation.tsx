@@ -4,6 +4,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 const navItems = [
   { path: '/', icon: 'home', label: '首页' },
   { path: '/edit', icon: 'edit_note', label: '编辑' },
+  { path: '/echo-admin', icon: 'forum', label: '回声洞' },
 ];
 
 export function Navigation() {

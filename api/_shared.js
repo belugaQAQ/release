@@ -77,6 +77,15 @@ async function initTables() {
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     `);
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS echoes (
+        id SERIAL PRIMARY KEY,
+        text TEXT NOT NULL,
+        user VARCHAR(255) NOT NULL,
+        approved BOOLEAN DEFAULT FALSE,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
     console.log('表初始化成功');
   } finally {
     await client.end();
@@ -281,6 +290,93 @@ export async function writeBetaChangelog(content) {
     }
   } catch (error) {
     console.error('写入测试版本更新日志失败:', error);
+    throw error;
+  }
+}
+
+export async function readApprovedEchoes() {
+  console.log('读取已审批回声洞...');
+  try {
+    const client = await getClient();
+    try {
+      const result = await client.query('SELECT id, text, user FROM echoes WHERE approved = TRUE ORDER BY created_at DESC');
+      console.log(`找到 ${result.rows.length} 条已审批回声洞`);
+      return result.rows.map(row => ({ text: row.text, user: row.user }));
+    } finally {
+      await client.end();
+    }
+  } catch (error) {
+    console.error('读取已审批回声洞失败:', error);
+    return [];
+  }
+}
+
+export async function writeEcho(text, user) {
+  console.log('写入新回声洞...');
+  try {
+    await initTables();
+    const client = await getClient();
+    try {
+      const result = await client.query(
+        'INSERT INTO echoes (text, user, approved) VALUES ($1, $2, FALSE) RETURNING id',
+        [text, user]
+      );
+      console.log('回声洞提交成功');
+      return result.rows[0];
+    } finally {
+      await client.end();
+    }
+  } catch (error) {
+    console.error('写入回声洞失败:', error);
+    throw error;
+  }
+}
+
+export async function readPendingEchoes() {
+  console.log('读取待审批回声洞...');
+  try {
+    const client = await getClient();
+    try {
+      const result = await client.query('SELECT id, text, user, created_at FROM echoes WHERE approved = FALSE ORDER BY created_at ASC');
+      console.log(`找到 ${result.rows.length} 条待审批回声洞`);
+      return result.rows;
+    } finally {
+      await client.end();
+    }
+  } catch (error) {
+    console.error('读取待审批回声洞失败:', error);
+    return [];
+  }
+}
+
+export async function approveEcho(id) {
+  console.log('审批通过回声洞...');
+  try {
+    const client = await getClient();
+    try {
+      await client.query('UPDATE echoes SET approved = TRUE WHERE id = $1', [id]);
+      console.log(`回声洞 ${id} 审批通过`);
+    } finally {
+      await client.end();
+    }
+  } catch (error) {
+    console.error('审批回声洞失败:', error);
+    throw error;
+  }
+}
+
+export async function rejectEcho(id) {
+  console.log('拒绝并删除回声洞...');
+  try {
+    const client = await getClient();
+    try {
+      await client.query('DELETE FROM echoes WHERE id = $1', [id]);
+      console.log(`回声洞 ${id} 已删除`);
+    } finally {
+      await client.end();
+    }
+  } catch (error) {
+    console.error('删除回声洞失败:', error);
     throw error;
   }
 }

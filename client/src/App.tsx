@@ -4,6 +4,8 @@ import { KeyAuthProvider, useKeyAuth } from './hooks/useKeyAuth';
 import { AuthenticationPage } from './pages/AuthenticationPage';
 import { HomePage } from './pages/HomePage';
 import { EditPage } from './pages/EditPage';
+import { EchoSubmitPage } from './pages/EchoSubmitPage';
+import { EchoAdminPage } from './pages/EchoAdminPage';
 import { ErrorBoundary } from './components/UI/ErrorBoundary';
 import './styles/global.css';
 
@@ -23,6 +25,8 @@ function AppContent() {
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/edit" element={<EditPage />} />
+        <Route path="/echo-submit" element={<EchoSubmitPage />} />
+        <Route path="/echo-admin" element={<EchoAdminPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </ErrorBoundary>

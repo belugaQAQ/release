@@ -247,5 +247,99 @@ export async function updateBetaChangelog(content: string, keyFile: any): Promis
   });
 }
 
+export async function getEchoes(): Promise<ApiResponse> {
+  return api.get('/api/echoes');
+}
+
+export async function submitEcho(text: string, user: string): Promise<ApiResponse> {
+  return api.post('/api/echoes', { text, user });
+}
+
+export async function getPendingEchoes(keyFile: any): Promise<ApiResponse> {
+  let actualKeyFile = keyFile;
+  
+  if (!actualKeyFile) {
+    const stored = sessionStorage.getItem('auth_key');
+    if (stored) {
+      try {
+        actualKeyFile = JSON.parse(stored);
+      } catch {
+        console.error('Failed to parse stored key file');
+      }
+    }
+  }
+
+  if (!actualKeyFile) {
+    throw new Error('No authentication key available');
+  }
+
+  const headers: Record<string, string> = {
+    'Authorization': `Bearer ${JSON.stringify(actualKeyFile)}`,
+  };
+  
+  return request('/api/echoes-admin', {
+    method: 'GET',
+    headers,
+  });
+}
+
+export async function approveEcho(id: number, keyFile: any): Promise<ApiResponse> {
+  let actualKeyFile = keyFile;
+  
+  if (!actualKeyFile) {
+    const stored = sessionStorage.getItem('auth_key');
+    if (stored) {
+      try {
+        actualKeyFile = JSON.parse(stored);
+      } catch {
+        console.error('Failed to parse stored key file');
+      }
+    }
+  }
+
+  if (!actualKeyFile) {
+    throw new Error('No authentication key available');
+  }
+
+  const headers: Record<string, string> = {
+    'Authorization': `Bearer ${JSON.stringify(actualKeyFile)}`,
+  };
+  
+  return request('/api/echoes-admin', {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({ id, action: 'approve' }),
+  });
+}
+
+export async function rejectEcho(id: number, keyFile: any): Promise<ApiResponse> {
+  let actualKeyFile = keyFile;
+  
+  if (!actualKeyFile) {
+    const stored = sessionStorage.getItem('auth_key');
+    if (stored) {
+      try {
+        actualKeyFile = JSON.parse(stored);
+      } catch {
+        console.error('Failed to parse stored key file');
+      }
+    }
+  }
+
+  if (!actualKeyFile) {
+    throw new Error('No authentication key available');
+  }
+
+  const headers: Record<string, string> = {
+    'Authorization': `Bearer ${JSON.stringify(actualKeyFile)}`,
+  };
+  
+  return request('/api/echoes-admin', {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({ id, action: 'reject' }),
+  });
+}
+
 export { ApiError, ApiResponse };
 export default api;
