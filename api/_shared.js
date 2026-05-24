@@ -81,7 +81,7 @@ async function initTables() {
       CREATE TABLE IF NOT EXISTS echoes (
         id SERIAL PRIMARY KEY,
         text TEXT NOT NULL,
-        user VARCHAR(255) NOT NULL,
+        author VARCHAR(255) NOT NULL,
         approved BOOLEAN DEFAULT FALSE,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
@@ -299,9 +299,9 @@ export async function readApprovedEchoes() {
   try {
     const client = await getClient();
     try {
-      const result = await client.query('SELECT id, text, user FROM echoes WHERE approved = TRUE ORDER BY created_at DESC');
+      const result = await client.query('SELECT id, text, author FROM echoes WHERE approved = TRUE ORDER BY created_at DESC');
       console.log(`找到 ${result.rows.length} 条已审批回声洞`);
-      return result.rows.map(row => ({ text: row.text, user: row.user }));
+      return result.rows.map(row => ({ text: row.text, user: row.author }));
     } finally {
       await client.end();
     }
@@ -311,15 +311,15 @@ export async function readApprovedEchoes() {
   }
 }
 
-export async function writeEcho(text, user) {
+export async function writeEcho(text, author) {
   console.log('写入新回声洞...');
   try {
     await initTables();
     const client = await getClient();
     try {
       const result = await client.query(
-        'INSERT INTO echoes (text, user, approved) VALUES ($1, $2, FALSE) RETURNING id',
-        [text, user]
+        'INSERT INTO echoes (text, author, approved) VALUES ($1, $2, FALSE) RETURNING id',
+        [text, author]
       );
       console.log('回声洞提交成功');
       return result.rows[0];
@@ -337,9 +337,9 @@ export async function readPendingEchoes() {
   try {
     const client = await getClient();
     try {
-      const result = await client.query('SELECT id, text, user, created_at FROM echoes WHERE approved = FALSE ORDER BY created_at ASC');
+      const result = await client.query('SELECT id, text, author, created_at FROM echoes WHERE approved = FALSE ORDER BY created_at ASC');
       console.log(`找到 ${result.rows.length} 条待审批回声洞`);
-      return result.rows;
+      return result.rows.map(row => ({ id: row.id, text: row.text, user: row.author, created_at: row.created_at }));
     } finally {
       await client.end();
     }
