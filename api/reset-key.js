@@ -4,6 +4,10 @@ export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ success: false, error: 'METHOD_NOT_ALLOWED', message: '只允许 POST 请求' });
   }
+  const { authorization } = req.headers;
+  if (!authorization || !authorization.startsWith('Bearer ')) {
+    return res.status(401).json({ success: false, error: 'UNAUTHORIZED', message: '缺少认证信息' });
+  }
 
   try {
     const registry = await readKeyRegistry();

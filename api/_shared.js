@@ -1,31 +1,5 @@
-import crypto from 'crypto';
-import bcrypt from 'bcryptjs';
 import { Client } from '@neondatabase/serverless';
-
-export function generateKeyPair() {
-  return {
-    masterKey: crypto.randomBytes(32),
-    iv: crypto.randomBytes(16),
-  };
-}
-
-export function encrypt(plaintext, keyPair) {
-  const cipher = crypto.createCipheriv('aes-256-gcm', keyPair.masterKey, keyPair.iv);
-  let encrypted = cipher.update(plaintext, 'utf8', 'base64');
-  encrypted += cipher.final('base64');
-  const authTag = cipher.getAuthTag().toString('base64');
-  return { encryptedSeed: encrypted, authTag, iv: keyPair.iv.toString('base64') };
-}
-
-export function generateKeyId() {
-  const timestamp = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-  const random = crypto.randomBytes(6).toString('hex');
-  return `key_${timestamp}_${random}`;
-}
-
-export function generateSeed() {
-  return crypto.randomBytes(32).toString('hex');
-}
+export { generateKeyPair, encrypt, generateKeyId, generateSeed, hashKey } from './key-crypto.js';
 
 async function getClient() {
   if (!process.env.DATABASE_URL) {
@@ -92,7 +66,7 @@ async function initTables() {
   }
 }
 
-export async function readKeyRegistry() {
+async function neonReadKeyRegistry() {
   console.log('读取密钥注册表...');
   try {
     const client = await getClient();
@@ -113,7 +87,7 @@ export async function readKeyRegistry() {
   }
 }
 
-export async function writeKeyRegistry(registry) {
+async function neonWriteKeyRegistry(registry) {
   console.log('写入密钥注册表...');
   try {
     await initTables();
@@ -130,7 +104,7 @@ export async function writeKeyRegistry(registry) {
   }
 }
 
-export async function readLatestData() {
+async function neonReadLatestData() {
   console.log('读取最新数据...');
   try {
     const client = await getClient();
@@ -151,7 +125,7 @@ export async function readLatestData() {
   }
 }
 
-export async function writeLatestData(data) {
+async function neonWriteLatestData(data) {
   console.log('写入最新数据...');
   try {
     await initTables();
@@ -170,7 +144,7 @@ export async function writeLatestData(data) {
   }
 }
 
-export async function readChangelog() {
+async function neonReadChangelog() {
   console.log('读取更新日志...');
   try {
     await initTables();
@@ -192,7 +166,7 @@ export async function readChangelog() {
   }
 }
 
-export async function writeChangelog(content) {
+async function neonWriteChangelog(content) {
   console.log('写入更新日志...');
   try {
     await initTables();
@@ -210,11 +184,8 @@ export async function writeChangelog(content) {
   }
 }
 
-export async function hashKey(masterKeyBase64) {
-  return bcrypt.hash(masterKeyBase64, 12);
-}
 
-export async function readBetaData() {
+async function neonReadBetaData() {
   console.log('读取测试版本数据...');
   try {
     const client = await getClient();
@@ -235,7 +206,7 @@ export async function readBetaData() {
   }
 }
 
-export async function writeBetaData(data) {
+async function neonWriteBetaData(data) {
   console.log('写入测试版本数据...');
   try {
     await initTables();
@@ -254,7 +225,7 @@ export async function writeBetaData(data) {
   }
 }
 
-export async function readBetaChangelog() {
+async function neonReadBetaChangelog() {
   console.log('读取测试版本更新日志...');
   try {
     await initTables();
@@ -276,7 +247,7 @@ export async function readBetaChangelog() {
   }
 }
 
-export async function writeBetaChangelog(content) {
+async function neonWriteBetaChangelog(content) {
   console.log('写入测试版本更新日志...');
   try {
     await initTables();
@@ -294,7 +265,7 @@ export async function writeBetaChangelog(content) {
   }
 }
 
-export async function readApprovedEchoes() {
+async function neonReadApprovedEchoes() {
   console.log('读取已审批回声洞...');
   try {
     const client = await getClient();
@@ -311,7 +282,7 @@ export async function readApprovedEchoes() {
   }
 }
 
-export async function writeEcho(text, author) {
+async function neonWriteEcho(text, author) {
   console.log('写入新回声洞...');
   try {
     await initTables();
@@ -332,7 +303,7 @@ export async function writeEcho(text, author) {
   }
 }
 
-export async function readPendingEchoes() {
+async function neonReadPendingEchoes() {
   console.log('读取待审批回声洞...');
   try {
     const client = await getClient();
@@ -349,7 +320,7 @@ export async function readPendingEchoes() {
   }
 }
 
-export async function approveEcho(id) {
+async function neonApproveEcho(id) {
   console.log('审批通过回声洞...');
   try {
     const client = await getClient();
@@ -365,7 +336,7 @@ export async function approveEcho(id) {
   }
 }
 
-export async function rejectEcho(id) {
+async function neonRejectEcho(id) {
   console.log('拒绝并删除回声洞...');
   try {
     const client = await getClient();
@@ -380,3 +351,20 @@ export async function rejectEcho(id) {
     throw error;
   }
 }
+const fileStore = async () => import('./file-store.js');
+const useFileStore = () => !process.env.DATABASE_URL;
+export async function readKeyRegistry() { return useFileStore() ? (await fileStore()).readKeyRegistry() : neonReadKeyRegistry(); }
+export async function writeKeyRegistry(v) { return useFileStore() ? (await fileStore()).writeKeyRegistry(v) : neonWriteKeyRegistry(v); }
+export async function readLatestData() { return useFileStore() ? (await fileStore()).readLatestData() : neonReadLatestData(); }
+export async function writeLatestData(v) { return useFileStore() ? (await fileStore()).writeLatestData(v) : neonWriteLatestData(v); }
+export async function readChangelog() { return useFileStore() ? (await fileStore()).readChangelog() : neonReadChangelog(); }
+export async function writeChangelog(v) { return useFileStore() ? (await fileStore()).writeChangelog(v) : neonWriteChangelog(v); }
+export async function readBetaData() { return useFileStore() ? (await fileStore()).readBetaData() : neonReadBetaData(); }
+export async function writeBetaData(v) { return useFileStore() ? (await fileStore()).writeBetaData(v) : neonWriteBetaData(v); }
+export async function readBetaChangelog() { return useFileStore() ? (await fileStore()).readBetaChangelog() : neonReadBetaChangelog(); }
+export async function writeBetaChangelog(v) { return useFileStore() ? (await fileStore()).writeBetaChangelog(v) : neonWriteBetaChangelog(v); }
+export async function readApprovedEchoes() { return useFileStore() ? (await fileStore()).readApprovedEchoes() : neonReadApprovedEchoes(); }
+export async function writeEcho(a,b) { return useFileStore() ? (await fileStore()).writeEcho(a,b) : neonWriteEcho(a,b); }
+export async function readPendingEchoes() { return useFileStore() ? (await fileStore()).readPendingEchoes() : neonReadPendingEchoes(); }
+export async function approveEcho(v) { return useFileStore() ? (await fileStore()).approveEcho(v) : neonApproveEcho(v); }
+export async function rejectEcho(v) { return useFileStore() ? (await fileStore()).rejectEcho(v) : neonRejectEcho(v); }
