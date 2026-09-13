@@ -1,5 +1,5 @@
 import { Client } from '@neondatabase/serverless';
-export { generateKeyPair, encrypt, generateKeyId, generateSeed, hashKey } from './key-crypto.js';
+export { generateKeyPair, encrypt, generateKeyId, generateSeed, hashKey } from '../lib/backend/key-crypto.js';
 
 async function getClient() {
   if (!process.env.DATABASE_URL) {
@@ -351,7 +351,7 @@ async function neonRejectEcho(id) {
     throw error;
   }
 }
-const fileStore = async () => import('./file-store.js');
+const fileStore = async () => import('../lib/backend/file-store.js');
 const useFileStore = () => !process.env.DATABASE_URL;
 export async function readKeyRegistry() { return useFileStore() ? (await fileStore()).readKeyRegistry() : neonReadKeyRegistry(); }
 export async function writeKeyRegistry(v) { return useFileStore() ? (await fileStore()).writeKeyRegistry(v) : neonWriteKeyRegistry(v); }
