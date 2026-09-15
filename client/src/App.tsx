@@ -1,56 +1,18 @@
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
-import { KeyAuthProvider, useKeyAuth } from './hooks/useKeyAuth';
-import { AuthenticationPage } from './pages/AuthenticationPage';
-import { HomePage } from './pages/HomePage';
-import { EditPage } from './pages/EditPage';
-import { EchoSubmitPage } from './pages/EchoSubmitPage';
-import { EchoAdminPage } from './pages/EchoAdminPage';
-import { ErrorBoundary } from './components/UI/ErrorBoundary';
+import {useState} from 'react';
+import {M3eTheme} from '@m3e/react/theme';
+import {M3eAppBar} from '@m3e/react/app-bar';
+import AdminPage from './pages/AdminPage';
+import PublicPage from './pages/PublicPage';
 import './styles/global.css';
 
-function AppContent() {
-  const { isAuthenticated } = useKeyAuth();
-  const location = useLocation();
-
-  // 投稿页面不需要认证，也没有导航栏
-  if (location.pathname === '/echo-submit') {
-    return (
-      <Routes>
-        <Route path="/echo-submit" element={<EchoSubmitPage />} />
-        <Route path="*" element={<Navigate to="/echo-submit" replace />} />
-      </Routes>
-    );
-  }
-
-  if (!isAuthenticated) {
-    return (
-      <ErrorBoundary>
-        <AuthenticationPage />
-      </ErrorBoundary>
-    );
-  }
-
-  return (
-    <ErrorBoundary>
-      <Routes>
-        <Route path="/" element={<HomePage />} />
-        <Route path="/edit" element={<EditPage />} />
-        <Route path="/echo-admin" element={<EchoAdminPage />} />
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </ErrorBoundary>
-  );
+export default function App() {
+    const [admin, setAdmin] = useState(false);
+    return <M3eTheme scheme="auto" contrast="standard" density="0" motion="expressive">
+        {admin ? <><M3eAppBar size="small">
+            <div slot="title" className="app-brand"><img className="app-logo" src="/favicon.svg" alt=""/><span>StickyHomeworks2 API · 管理</span>
+            </div>
+        </M3eAppBar><AdminPage onExit={() => setAdmin(false)}/></> : <><PublicPage/>
+            <button className="admin-entry" onClick={() => setAdmin(true)}>管理后台</button>
+        </>}
+    </M3eTheme>;
 }
-
-function App() {
-  return (
-    <Router>
-      <KeyAuthProvider>
-        <AppContent />
-      </KeyAuthProvider>
-    </Router>
-  );
-}
-
-export default App;

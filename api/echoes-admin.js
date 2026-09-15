@@ -1,4 +1,4 @@
-import { readPendingEchoes, approveEcho, rejectEcho } from './_shared.js';
+import { readPendingEchoes, readApprovedEchoes, approveEcho, rejectEcho, deleteApprovedEcho } from './_shared.js';
 
 export default async function handler(req, res) {
   if (req.method === 'GET') {
@@ -9,7 +9,7 @@ export default async function handler(req, res) {
         return res.status(401).json({ success: false, error: 'UNAUTHORIZED', message: '缺少认证信息' });
       }
 
-      const echoes = await readPendingEchoes();
+      const echoes = req.query.approved === 'true' ? await readApprovedEchoes() : await readPendingEchoes();
       return res.status(200).json({ success: true, echoes });
     } catch (error) {
       console.error('获取待审批回声洞失败:', error);
@@ -17,30 +17,19 @@ export default async function handler(req, res) {
     }
   }
 
-  if (req.method === 'POST') {
+  if (req.method === 'POST' || req.method === 'DELETE') {
     try {
       const { authorization } = req.headers;
-      const { id, action } = req.body;
-
-      if (!authorization || !authorization.startsWith('Bearer ')) {
-        return res.status(401).json({ success: false, error: 'UNAUTHORIZED', message: '缺少认证信息' });
+      const body = req.body || {};
+      const id = body.id ?? req.query.id;
+      const action = body.action ?? req.query.action;
+      if (id === undefined || id === null || id === '') return res.status(400).json({ success: false, error: 'INVALID_REQUEST', message: '请提供回声洞 ID' });
+      if (req.method === 'DELETE' || action === 'delete') {
+        await deleteApprovedEcho(id);
+        return res.status(200).json({ success: true, message: '已删除该回声洞' });
       }
-
-      if (!id) {
-        return res.status(400).json({ success: false, error: 'INVALID_REQUEST', message: '请提供回声洞 ID' });
-      }
-
-      if (action !== 'approve' && action !== 'reject') {
-        return res.status(400).json({ success: false, error: 'INVALID_REQUEST', message: '请指定有效的操作（approve 或 reject）' });
-      }
-
-      if (action === 'approve') {
-        await approveEcho(id);
-        return res.status(200).json({ success: true, message: '已同意该回声洞' });
-      } else {
-        await rejectEcho(id);
-        return res.status(200).json({ success: true, message: '已拒绝该回声洞' });
-      }
+      if (action === 'approve') await approveEcho(id); else await rejectEcho(id);
+      return res.status(200).json({ success: true, message: action === 'approve' ? '已同意该回声洞' : '已拒绝该回声洞' });
     } catch (error) {
       console.error('审批回声洞失败:', error);
       return res.status(500).json({ success: false, error: 'INTERNAL_ERROR', message: '审批过程中发生错误' });

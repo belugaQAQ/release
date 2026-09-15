@@ -1,105 +1,29 @@
-import React, { useEffect, useState } from 'react';
-import { AppBar } from '../components/Layout/AppBar';
-import { KeyImporter } from '../components/KeyManagement/KeyImporter';
-import { KeyDownloader } from '../components/KeyManagement/KeyDownloader';
-import { useKeyAuth } from '../hooks/useKeyAuth';
-import api from '../utils/api';
+import {useRef} from 'react';
+import {M3eButton} from '@m3e/react/button';
+import {M3eCard} from '@m3e/react/card';
+import {M3eHeading} from '@m3e/react/heading';
 
-export function AuthenticationPage() {
-  const { isAuthenticated, isLoading, verifyKey } = useKeyAuth();
-  const [showDownloader, setShowDownloader] = useState(false);
-  const [keyFileData, setKeyFileData] = useState<object | null>(null);
-  const [generating, setGenerating] = useState(false);
-  const [checked, setChecked] = useState(false);
 
-  useEffect(() => {
-    if (!isAuthenticated && !checked) {
-      checkIfKeyExistsOnServer();
-      setChecked(true);
-    }
-  }, [isAuthenticated, checked]);
 
-  const checkIfKeyExistsOnServer = async () => {
-    try {
-      const response = await api.get('/api/verify-key', {
-        headers: { 'X-Check-Only': 'true' },
-      } as any);
-      if ((response as any).hasExistingKey) {
-        setShowDownloader(true);
-      } else {
-        setGenerating(true);
-        await generateNewKey();
-      }
-    } catch {
-      setGenerating(true);
-      await generateNewKey();
-    }
-  };
+type Props = { known: boolean | null; status: string; onImport: (file: File) => void; onGenerate: () => void; onExit: () => void };
 
-  const generateNewKey = async () => {
-    try {
-      const response = await api.post('/api/generate-key');
-      if (response.success) {
-        setKeyFileData(response.data);
-        setShowDownloader(true);
-      }
-    } catch (error) {
-      console.error('生成密钥失败了喵:', error);
-    } finally {
-      setGenerating(false);
-    }
-  };
-
-  const handleImportSuccess = async (keyData: any) => {
-    await verifyKey(keyData);
-  };
-
-  const handleDownloadComplete = () => {
-    setShowDownloader(false);
-  };
-
-  if (isLoading || generating) {
-    return (
-      <div className="auth-page">
-        <AppBar title="身份验证" />
-        <div className="auth-content">
-          <mdui-circular-progress></mdui-circular-progress>
-          <p className="auth-loading-text">
-            {generating ? '正在生成密钥...' : '正在验证...'}
-          </p>
-        </div>
-      </div>
-    );
-  }
-
-  if (isAuthenticated) {
-    return null;
-  }
-
-  return (
-    <div className="auth-page">
-      <AppBar title="身份验证" />
-      <div className="auth-content">
-        <div className="auth-icon-container">
-          <mdui-icon name="vpn_key" style={{ fontSize: '42px', color: 'var(--md-sys-color-primary)' }}></mdui-icon>
-        </div>
-
-        <div className="auth-title">身份验证</div>
-        <div className="auth-subtitle">请上传您的密钥文件以继续访问系统</div>
-
-        {showDownloader && keyFileData ? (
-          <div className="auth-downloader">
-            <KeyDownloader
-              keyFileData={keyFileData}
-              onDownloadComplete={handleDownloadComplete}
-            />
-          </div>
-        ) : (
-          <KeyImporter onImportSuccess={handleImportSuccess} />
-        )}
-      </div>
-    </div>
-  );
+export default function AuthenticationPage({known, status, onImport, onGenerate, onExit}: Props) {
+    const fileInput = useRef<HTMLInputElement>(null);
+    return <main className="auth-page">
+        <section className="auth-hero" aria-labelledby="auth-title">
+            <span className="material-symbols-outlined auth-icon" aria-hidden="true">admin_panel_settings</span>
+            <M3eHeading id="auth-title" variant="display" size="large">管理员认证</M3eHeading>
+            <p>导入管理员密钥文件以访问版本发布、回声审核和安全设置。</p>
+        </section>
+        <M3eCard className="auth-card" variant="elevated"><div slot="content" className="auth-card-content">
+            <M3eHeading variant="title" size="large" level="2">验证身份</M3eHeading>
+            {known === false ? <div className="auth-action"><p>系统尚未配置管理员密钥。</p><M3eButton onClick={onGenerate} variant="filled"><span className="material-symbols-outlined" aria-hidden="true">key</span>生成新密钥</M3eButton></div> : <div className="auth-action">
+                <input ref={fileInput} className="auth-file-input" id="admin-key-file" type="file" accept=".json,application/json" onChange={e => e.target.files?.[0] && onImport(e.target.files[0])}/>
+                <M3eCard className="auth-drop-card" variant="outlined" role="button" tabIndex={0} onClick={() => fileInput.current?.click()} onKeyDown={e => (e.key === 'Enter' || e.key === ' ') && fileInput.current?.click()} onDragOver={e => {e.preventDefault(); e.currentTarget.classList.add('drag-over')}} onDragLeave={e => e.currentTarget.classList.remove('drag-over')} onDrop={e => {e.preventDefault(); e.currentTarget.classList.remove('drag-over'); const file = e.dataTransfer.files[0]; if (file) onImport(file)}}>
+                    <div slot="content" className="auth-drop-content"><span className="material-symbols-outlined auth-drop-icon" aria-hidden="true">upload_file</span><M3eHeading variant="title" size="medium" level="3">选择或拖放密钥文件</M3eHeading><p>支持 JSON 格式，点击此卡片选择文件</p></div>
+                </M3eCard>
+            </div>}
+        </div></M3eCard>
+        <M3eButton onClick={onExit} variant="text"><span className="material-symbols-outlined" aria-hidden="true">arrow_back</span>返回公开页面</M3eButton>
+    </main>;
 }
-
-export default AuthenticationPage;

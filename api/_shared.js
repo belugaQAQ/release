@@ -270,9 +270,8 @@ async function neonReadApprovedEchoes() {
   try {
     const client = await getClient();
     try {
-      const result = await client.query('SELECT id, text, author FROM echoes WHERE approved = TRUE ORDER BY created_at DESC');
-      console.log(`找到 ${result.rows.length} 条已审批回声洞`);
-      return result.rows.map(row => ({ text: row.text, user: row.author }));
+      const result = await client.query('SELECT id, text, author, created_at FROM echoes WHERE approved = TRUE ORDER BY created_at DESC');
+      return result.rows.map(row => ({ id: row.id, text: row.text, user: row.author, created_at: row.created_at }));
     } finally {
       await client.end();
     }
@@ -351,6 +350,11 @@ async function neonRejectEcho(id) {
     throw error;
   }
 }
+async function neonDeleteApprovedEcho(id) {
+  const client = await getClient();
+  try { await client.query('DELETE FROM echoes WHERE id = $1 AND approved = TRUE', [id]); }
+  finally { await client.end(); }
+}
 const fileStore = async () => import('../lib/backend/file-store.js');
 const useFileStore = () => !process.env.DATABASE_URL;
 export async function readKeyRegistry() { return useFileStore() ? (await fileStore()).readKeyRegistry() : neonReadKeyRegistry(); }
@@ -368,3 +372,4 @@ export async function writeEcho(a,b) { return useFileStore() ? (await fileStore(
 export async function readPendingEchoes() { return useFileStore() ? (await fileStore()).readPendingEchoes() : neonReadPendingEchoes(); }
 export async function approveEcho(v) { return useFileStore() ? (await fileStore()).approveEcho(v) : neonApproveEcho(v); }
 export async function rejectEcho(v) { return useFileStore() ? (await fileStore()).rejectEcho(v) : neonRejectEcho(v); }
+export async function deleteApprovedEcho(v) { return useFileStore() ? (await fileStore()).deleteApprovedEcho(v) : neonDeleteApprovedEcho(v); }
