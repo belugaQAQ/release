@@ -66,7 +66,7 @@ export default function AdminPage({onExit}: Props) {
     };
     const echoesLoad = async (approved = approvedMode) => {
         try {
-            const b = await apiJson<any>(await fetch(`/api/echoes-admin?approved=${approved}`, {headers: headers()}));
+            const b = await apiJson<any>(await fetch(`/api/echoes-admin?approved=${approved}&_=${Date.now()}`, {headers: {...headers(), 'Cache-Control': 'no-cache'}, cache: 'no-store'}));
             setEchoes(b.echoes || []);
         } catch (e) { setStatus((e as Error).message); }
     };

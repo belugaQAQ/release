@@ -8,8 +8,12 @@ export default async function handler(req, res) {
       if (!authorization || !authorization.startsWith('Bearer ')) {
         return res.status(401).json({ success: false, error: 'UNAUTHORIZED', message: '缺少认证信息' });
       }
-
-      const echoes = req.query.approved === 'true' ? await readApprovedEchoes() : await readPendingEchoes();
+      res.setHeader('Content-Type', 'application/json; charset=utf-8');
+      res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+      res.setHeader('Pragma', 'no-cache');
+      res.setHeader('Expires', '0');
+      const approved = req.query.approved === 'true';
+      const echoes = approved ? await readApprovedEchoes() : await readPendingEchoes();
       return res.status(200).json({ success: true, echoes });
     } catch (error) {
       console.error('获取待审批回声洞失败:', error);
