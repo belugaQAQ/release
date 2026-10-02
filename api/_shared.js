@@ -1,5 +1,14 @@
 import { Client } from '@neondatabase/serverless';
 export { generateKeyPair, encrypt, generateKeyId, generateSeed, hashKey } from '../lib/backend/key-crypto.js';
+export async function requireAdmin(req) {
+  const authorization = req.headers.authorization || '';
+  const keyId = authorization.startsWith('Bearer ') ? authorization.slice(7).trim() : '';
+  if (!keyId) return { ok: false, status: 401, message: '缺少认证信息' };
+  const registry = await readKeyRegistry();
+  const key = registry.keys.find(k => k.keyId === keyId);
+  if (!key || key.status !== 'active' || (key.expiresAt && new Date(key.expiresAt) <= new Date())) return { ok: false, status: 401, message: '密钥无效或已过期' };
+  return { ok: true, keyId };
+}
 
 async function getClient() {
   if (!process.env.DATABASE_URL) {

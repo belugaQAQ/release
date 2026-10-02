@@ -9,11 +9,12 @@ import AuthenticationPage from './AuthenticationPage';
 import PublishPage from './PublishPage';
 import EchoReviewPage from './EchoReviewPage';
 import SecurityPage from './SecurityPage';
+import StoragePage from './StoragePage';
 
 type Props = { onExit: () => void };
 const emptyForm: ReleaseForm = {version: '', url: '', size: '', changelog: '', sha256: ''};
 export default function AdminPage({onExit}: Props) {
-    const [keyFile, setKeyFile] = useState<any>(null), [known, setKnown] = useState<boolean | null>(null), [form, setForm] = useState(emptyForm), [beta, setBeta] = useState(false), [status, setStatus] = useState(''), [echoes, setEchoes] = useState<Echo[]>([]), [loading, setLoading] = useState(false), [section, setSection] = useState<'publish' | 'echoes' | 'security'>('publish'), [approvedMode, setApprovedMode] = useState(false);
+    const [keyFile, setKeyFile] = useState<any>(null), [known, setKnown] = useState<boolean | null>(null), [form, setForm] = useState(emptyForm), [beta, setBeta] = useState(false), [status, setStatus] = useState(''), [echoes, setEchoes] = useState<Echo[]>([]), [loading, setLoading] = useState(false), [section, setSection] = useState<'publish' | 'storage' | 'echoes' | 'security'>('publish'), [approvedMode, setApprovedMode] = useState(false);
     useEffect(() => {
         fetch('/api/verify-key').then(r => r.json()).then(x => setKnown(x.hasExistingKey)).catch(() => setKnown(true));
     }, []);
@@ -49,6 +50,13 @@ export default function AdminPage({onExit}: Props) {
         } catch (e) {
             setStatus((e as Error).message);
         }
+    };
+    const saveObjectUrl = async (url: string, size: string, sha256: string, targetBeta: boolean) => {
+        const target = await Promise.all([fetch(`/api/${targetBeta ? 'beta.json' : 'latest.json'}`).then(r => r.json()), fetch(`/api/${targetBeta ? 'betamd.md' : 'changelog.md'}`).then(r => r.text())]);
+        const next = {...target[0], url, size: Number(size), sha256};
+        if (!next.version || !next.size || !next.sha256) throw new Error('该通道尚无完整版本信息，请先填写版本号');
+        await apiJson(await fetch('/api/update', {method: 'POST', headers: headers(), body: JSON.stringify({data: {...next, changelog: target[1] || next.changelog || ''}, beta: targetBeta})}));
+        setStatus(`${targetBeta ? 'Beta' : '正式'}版下载数据已自动保存`);
     };
     const submit = async () => {
         if (!/^\d+\.\d+\.\d+\.\d+$/.test(form.version) || !/^https?:\/\//.test(form.url) || !/^\d+$/.test(form.size) || Number(form.size) <= 0 || !form.changelog.trim() || !/^[\da-f]{64}$/i.test(form.sha256)) return setStatus('请填写有效的版本、链接、大小、日志和 SHA-256');
@@ -91,7 +99,8 @@ export default function AdminPage({onExit}: Props) {
     if (!keyFile) return <AuthenticationPage known={known} status={status} onImport={importKey} onGenerate={generate}
                                              onExit={onExit}/>;
     const content = section === 'publish' ?
-        <PublishPage beta={beta} form={form} loading={loading} status={status} onBeta={setBeta} onChange={(key, value) => setForm({...form, [key]: value})} onSubmit={submit}/> : section === 'echoes' ?
+        <PublishPage beta={beta} form={form} loading={loading} status={status} onBeta={setBeta} onChange={(key, value) => setForm({...form, [key]: value})} onSubmit={submit}/> : section === 'storage' ?
+        <StoragePage auth={auth} status={status} onStatus={setStatus} onUseUrl={saveObjectUrl}/> : section === 'echoes' ?
         <EchoReviewPage echoes={echoes} status={status} onLoad={echoesLoad} approved={approvedMode} onMode={setApprovedMode} onModerate={moderate}/> :
         <SecurityPage status={status} onReset={reset}/>;
     return <div className="admin-shell"><M3eNavRail id="admin-nav-rail" mode="auto" aria-label="管理导航"><M3eIconButton
@@ -101,9 +110,9 @@ export default function AdminPage({onExit}: Props) {
         className="material-symbols-outlined">logout</span><span slot="label">退出管理</span></M3eFab><M3eNavItem
         selected={section === 'publish'} onClick={() => setSection('publish')}><span
         className="material-symbols-outlined" slot="icon">edit</span>发布管理</M3eNavItem><M3eNavItem
+        selected={section === 'storage'} onClick={() => setSection('storage')}><span className="material-symbols-outlined" slot="icon">cloud</span>对象存储</M3eNavItem><M3eNavItem
         selected={section === 'echoes'} onClick={() => { setSection('echoes'); echoesLoad(); }}><span className="material-symbols-outlined" slot="icon">feedback</span>回声管理</M3eNavItem><M3eNavItem
-        selected={section === 'security'} onClick={() => setSection('security')}><span
-        className="material-symbols-outlined" slot="icon">settings</span>安全设置</M3eNavItem></M3eNavRail>
+        selected={section === 'security'} onClick={() => setSection('security')}><span className="material-symbols-outlined" slot="icon">settings</span>安全设置</M3eNavItem></M3eNavRail>
         <div className="admin-content">{content}</div>
     </div>;
 }

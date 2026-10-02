@@ -264,3 +264,39 @@ m3e-snackbar { background: transparent; }
     .admin-shell m3e-nav-rail button { flex: 0 0 auto; width: auto; white-space: nowrap; }
     .admin-content { width: 100%; padding-top: 20px; }
 }
+.storage-toolbar { display: flex; align-items: end; gap: 12px; flex-wrap: wrap; }
+.storage-toolbar m3e-form-field { flex: 1 1 280px; }
+.storage-upload { display: inline-flex; align-items: center; min-height: 40px; padding: 0 16px; border-radius: 999px; color: var(--md-sys-color-on-primary); background: var(--md-sys-color-primary); cursor: pointer; }
+.storage-upload input { display: none; }
+.storage-list { display: grid; gap: 0; }
+.storage-item { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 14px 0; border-top: 1px solid var(--md-sys-color-outline-variant); }
+.storage-item > div:first-child { min-width: 0; display: grid; gap: 4px; }
+.storage-item strong { overflow-wrap: anywhere; }
+.storage-item span { color: var(--md-sys-color-on-surface-variant); font-size: 0.875rem; }
+@media (max-width: 700px) { .storage-item { align-items: flex-start; flex-direction: column; } }
+.storage-supporting { margin: 4px 0 0; color: var(--md-sys-color-on-surface-variant); font-size: .875rem; }
+.storage-empty { display: grid; place-items: center; gap: 8px; min-height: 160px; color: var(--md-sys-color-on-surface-variant); text-align: center; }
+.storage-empty .material-symbols-outlined { font-size: 42px; }
+.storage-actions { display: flex; align-items: center; gap: 4px; }
+.storage-manager { gap: 0; }
+.storage-manager-header { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding-bottom: 20px; }
+.storage-manager-actions { display: flex; align-items: center; gap: 8px; }
+.storage-breadcrumb { display: flex; align-items: center; flex-wrap: wrap; min-height: 48px; padding: 4px 8px; border-block: 1px solid var(--md-sys-color-outline-variant); color: var(--md-sys-color-on-surface-variant); }
+.storage-breadcrumb > span { display: inline-flex; align-items: center; }
+.storage-breadcrumb .material-symbols-outlined { font-size: 20px; }
+.storage-table { width: 100%; }
+.storage-table-head, .storage-row { display: grid; grid-template-columns: minmax(240px, 1fr) 120px 190px 190px; align-items: center; gap: 16px; min-height: 56px; padding: 0 12px; }
+.storage-table-head { color: var(--md-sys-color-on-surface-variant); font-size: .875rem; border-bottom: 1px solid var(--md-sys-color-outline-variant); }
+.storage-row { width: 100%; border: 0; border-bottom: 1px solid var(--md-sys-color-outline-variant); background: transparent; color: var(--md-sys-color-on-surface); text-align: left; }
+.storage-row > span:first-child { display: flex; align-items: center; gap: 10px; min-width: 0; overflow-wrap: anywhere; }
+.storage-row > span:first-child .material-symbols-outlined { color: var(--md-sys-color-primary); }
+.storage-directory { cursor: pointer; font: inherit; }
+.storage-directory:hover { background: var(--md-sys-color-surface-container-high); }
+.storage-empty { display: grid; place-items: center; gap: 8px; min-height: 220px; color: var(--md-sys-color-on-surface-variant); text-align: center; }
+.storage-empty .material-symbols-outlined { font-size: 42px; }
+@media (max-width: 800px) { .storage-manager-header { align-items: flex-start; flex-direction: column; } .storage-table-head { display: none; } .storage-row { grid-template-columns: 1fr auto; gap: 4px 12px; padding: 12px; } .storage-row > span:nth-child(2), .storage-row > span:nth-child(3) { color: var(--md-sys-color-on-surface-variant); font-size: .8125rem; } .storage-row > span:nth-child(2) { grid-column: 1; } .storage-row > span:nth-child(3) { grid-column: 1; } .storage-row > span:last-child { grid-column: 2; grid-row: 1 / span 3; } }
+.storage-dialog-content { display: grid; gap: 12px; min-width: min(360px, 72vw); }
+.storage-dialog-content p { margin: 0; color: var(--md-sys-color-on-surface-variant); }
+#storage-link-dialog { --m3e-dialog-min-width: min(360px, calc(100vw - 48px)); --m3e-dialog-max-width: min(560px, calc(100vw - 48px)); --m3e-dialog-max-height: min(720px, calc(100vh - 32px)); }
+#storage-link-dialog .storage-dialog-content { display: grid; gap: 12px; min-width: 0; min-height: 180px; align-content: start; }
+#storage-link-dialog .storage-dialog-content p { margin: 0; color: var(--md-sys-color-on-surface-variant); }
